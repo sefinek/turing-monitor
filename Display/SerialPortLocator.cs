@@ -16,9 +16,7 @@ public static class SerialPortLocator
 		foreach (SerialDevice device in EnumerateSerialDevices())
 		{
 			var id = device.PnpDeviceId.ToUpperInvariant();
-			if (id.Contains(KnownSerialNumber))
-				return device.PortName;
-			if (id.Contains("VID_" + KnownVid) && id.Contains("PID_" + KnownPid))
+			if (id.Contains(KnownSerialNumber) || (id.Contains("VID_" + KnownVid) && id.Contains("PID_" + KnownPid)))
 				return device.PortName;
 		}
 

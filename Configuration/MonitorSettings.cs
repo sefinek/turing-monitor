@@ -1,6 +1,6 @@
 using TuringMonitor.Display;
 
-namespace TuringMonitor.Monitor;
+namespace TuringMonitor.Configuration;
 
 public sealed class MonitorSettings
 {
@@ -22,4 +22,5 @@ public sealed class MonitorSettings
 	public string DiskDrive { get; set; } = "";
 	public bool ExitWhenNoEthernet { get; set; }
 	public bool ExitWhenAway { get; set; }
+	public bool AutoReconnect { get; set; } = true;
 }

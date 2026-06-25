@@ -1,16 +1,16 @@
 using System.IO;
 using System.Text.Json;
+using TuringMonitor.Logging;
 
-namespace TuringMonitor.Monitor;
+namespace TuringMonitor.Configuration;
 
 public static class SettingsStore
 {
-
-	private static readonly string FilePath = Path.Combine(DataDirectory, "settings.json");
-
 	private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
 	public static string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TuringMonitor");
+
+	private static string FilePath => Path.Combine(DataDirectory, "settings.json");
 
 	public static MonitorSettings Load()
 	{
@@ -19,8 +19,9 @@ public static class SettingsStore
 			if (File.Exists(FilePath))
 				return JsonSerializer.Deserialize<MonitorSettings>(File.ReadAllText(FilePath)) ?? new MonitorSettings();
 		}
-		catch
+		catch (Exception ex)
 		{
+			AppLog.Warn($"Failed to load settings, using defaults: {ex.Message}");
 		}
 
 		return new MonitorSettings();
@@ -33,8 +34,9 @@ public static class SettingsStore
 			Directory.CreateDirectory(DataDirectory);
 			File.WriteAllText(FilePath, JsonSerializer.Serialize(settings, Options));
 		}
-		catch
+		catch (Exception ex)
 		{
+			AppLog.Error(ex, "Failed to save settings");
 		}
 	}
 }

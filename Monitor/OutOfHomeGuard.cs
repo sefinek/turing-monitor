@@ -1,5 +1,6 @@
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using TuringMonitor.Configuration;
 using TuringMonitor.Display;
 using TuringMonitor.Logging;
 

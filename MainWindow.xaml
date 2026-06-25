@@ -27,6 +27,10 @@
 					<Image Width="22" Height="22" Source="/app.ico" RenderOptions.BitmapScalingMode="HighQuality" />
 					<TextBlock Text="Turing Monitor" Margin="10,0,0,0" FontSize="13" FontWeight="SemiBold"
 					           VerticalAlignment="Center" />
+					<TextBlock x:Name="lblVersion" Margin="8,0,0,0" FontSize="12" VerticalAlignment="Center"
+					           Foreground="{StaticResource MutedBrush}" Cursor="Hand"
+					           WindowChrome.IsHitTestVisibleInChrome="True"
+					           MouseLeftButtonUp="lblVersion_Click" ToolTip="About" />
 				</StackPanel>
 				<StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
 					<Button x:Name="btnReadings" Style="{StaticResource CaptionButton}" Click="btnReadings_Click"
@@ -59,7 +63,7 @@
 
 				<DockPanel Grid.Column="0">
 					<StackPanel DockPanel.Dock="Top">
-						<TextBlock Text="DISPLAY PORT" Style="{StaticResource SectionLabel}" />
+						<TextBlock Text="DISPLAY PORT" Style="{StaticResource SectionLabel}" FontSize="13" />
 						<Grid Margin="0,0,0,16">
 							<Grid.ColumnDefinitions>
 								<ColumnDefinition Width="*" />
@@ -71,10 +75,10 @@
 							        Width="80" Height="34" Margin="8,0,0,0" Content="Refresh" Click="btnRefresh_Click" />
 						</Grid>
 
-						<Grid Margin="0,0,0,18">
-							<TextBlock Text="BRIGHTNESS" Style="{StaticResource SectionLabel}" HorizontalAlignment="Left" />
+						<Grid Margin="0,0,0,24">
+							<TextBlock Text="BRIGHTNESS" Style="{StaticResource SectionLabel}" FontSize="13" HorizontalAlignment="Left" />
 							<TextBlock x:Name="lblBrightness" Text="50%" Foreground="{StaticResource TextBrush}"
-							           FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" />
+							           FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Right" />
 						</Grid>
 						<Slider x:Name="sldBrightness" Style="{StaticResource ModernSlider}" Minimum="0" Maximum="100"
 						        Value="50" TickFrequency="5" IsSnapToTickEnabled="True"
@@ -88,9 +92,9 @@
 							<ColumnDefinition Width="*" />
 						</Grid.ColumnDefinitions>
 						<Button Grid.Column="0" x:Name="btnStart" Style="{StaticResource AccentButton}"
-						        Height="42" Content="Start" Click="btnStart_Click" />
+						        Height="38" Content="Start" Click="btnStart_Click" />
 						<Button Grid.Column="2" x:Name="btnStop" Style="{StaticResource GhostButton}"
-						        Height="42" Content="Stop" IsEnabled="False" Click="btnStop_Click" />
+						        Height="38" Content="Stop" IsEnabled="False" Click="btnStop_Click" />
 					</Grid>
 
 					<Border Margin="0,14,0,0" CornerRadius="10" Padding="10"
@@ -108,12 +112,12 @@
 					<DockPanel>
 						<Grid DockPanel.Dock="Top" Margin="2,0,2,14">
 							<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-								<TextBlock Text="SCREEN PREVIEW" Style="{StaticResource SectionLabel}" Margin="0" />
+								<TextBlock Text="SCREEN PREVIEW" Style="{StaticResource SectionLabel}" FontSize="13" Margin="0" />
 							</StackPanel>
 							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-								<Ellipse x:Name="statusDot" Width="9" Height="9" Fill="{StaticResource MutedBrush}"
+								<Ellipse x:Name="statusDot" Width="11" Height="11" Fill="{StaticResource MutedBrush}"
 								         VerticalAlignment="Center" />
-								<TextBlock x:Name="lblConn" Text="Disconnected" Margin="8,0,0,0" FontSize="11"
+								<TextBlock x:Name="lblConn" Text="Disconnected" Margin="8,0,0,0" FontSize="13"
 								           Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
 							</StackPanel>
 						</Grid>
@@ -187,7 +191,10 @@
 								<CheckBox x:Name="chkAutostart" Style="{StaticResource ToggleSwitch}"
 								          Content="Run at Windows startup" Margin="0,0,0,14" />
 								<CheckBox x:Name="chkAutoStartMonitor" Style="{StaticResource ToggleSwitch}"
-								          Content="Start monitoring on launch" Margin="0,0,0,24" />
+								          Content="Start monitoring on launch" Margin="0,0,0,14" />
+								<CheckBox x:Name="chkAutoReconnect" Style="{StaticResource ToggleSwitch}"
+								          Content="Auto-reconnect to display" Margin="0,0,0,24"
+								          ToolTip="When the display disconnects, automatically try to reconnect every 5 seconds until it is found again or you press Stop." />
 
 								<TextBlock Text="General" Style="{StaticResource GroupHeader}" />
 								<TextBlock Text="REFRESH INTERVAL" Style="{StaticResource SectionLabel}" />
@@ -232,7 +239,7 @@
 									</StackPanel>
 								</Grid>
 
-								<TextBlock Text="Examples: HH:mm:ss · dddd, dd MMMM yyyy — names follow the language"
+								<TextBlock Text="Examples: HH:mm:ss · dddd, dd MMMM yyyy (names follow the language)"
 								           Foreground="{StaticResource MutedBrush}" FontSize="11" TextWrapping="Wrap"
 								           Margin="0,0,0,24" />
 

@@ -1,4 +1,6 @@
 using System.Drawing;
+using System.IO;
+using TuringMonitor.Configuration;
 using TuringMonitor.Display;
 using TuringMonitor.Logging;
 using TuringMonitor.Rendering;
@@ -10,6 +12,7 @@ namespace TuringMonitor.Monitor;
 public sealed class MonitorService : IDisposable
 {
 	private const int BandHeight = 16;
+	private const int ReconnectDelayMs = 5000;
 	private readonly object _gate = new();
 
 	private readonly DashboardRenderer _renderer = new();
@@ -42,7 +45,7 @@ public sealed class MonitorService : IDisposable
 			_cts = new CancellationTokenSource();
 			CancellationToken token = _cts.Token;
 			IsRunning = true;
-			_loop = Task.Run(() => RunLoop(settings, token));
+			_loop = Task.Run(() => RunLoop(settings, token), token);
 		}
 
 		AppLog.Info($"Starting monitor (port={settings.ComPort}, orientation={settings.Orientation}, brightness={settings.Brightness}%)");
@@ -86,6 +89,35 @@ public sealed class MonitorService : IDisposable
 
 	private void RunLoop(MonitorSettings settings, CancellationToken token)
 	{
+		try
+		{
+			while (true)
+			{
+				RunSession(settings, token);
+
+				if (token.IsCancellationRequested || !settings.AutoReconnect)
+					break;
+
+				RunningChanged?.Invoke(false);
+				AppLog.Info($"Reconnecting in {ReconnectDelayMs / 1000} seconds...");
+				if (token.WaitHandle.WaitOne(ReconnectDelayMs))
+					break;
+			}
+		}
+		finally
+		{
+			lock (_gate)
+			{
+				IsRunning = false;
+			}
+
+			AppLog.Info("Monitor stopped");
+			RunningChanged?.Invoke(false);
+		}
+	}
+
+	private void RunSession(MonitorSettings settings, CancellationToken token)
+	{
 		TuringScreenRevA? screen = null;
 		SensorHub? sensors = null;
 		try
@@ -127,16 +159,19 @@ public sealed class MonitorService : IDisposable
 		catch (OperationCanceledException)
 		{
 		}
+		catch (Exception ex) when (IsConnectionError(ex))
+		{
+			AppLog.Warn(ex.Message);
+		}
 		catch (Exception ex)
 		{
-			AppLog.Error(ex, "Monitor loop failed");
+			AppLog.Error(ex, "Monitor session failed");
 		}
 		finally
 		{
 			lock (_gate)
 			{
 				_screen = null;
-				IsRunning = false;
 			}
 
 			try
@@ -149,10 +184,12 @@ public sealed class MonitorService : IDisposable
 
 			screen?.Dispose();
 			sensors?.Dispose();
-
-			AppLog.Info("Monitor stopped");
-			RunningChanged?.Invoke(false);
 		}
+	}
+
+	private static bool IsConnectionError(Exception ex)
+	{
+		return ex is IOException or InvalidOperationException or UnauthorizedAccessException or TimeoutException;
 	}
 
 	private void RunDashboardMode(TuringScreenRevA screen, SensorHub sensors, MonitorSettings settings, CancellationToken token)
@@ -262,16 +299,14 @@ public sealed class MonitorService : IDisposable
 		}
 	}
 
-	private static int PushDirtyBands(TuringScreenRevA screen, int w, int h, byte[] frame, byte[]? prev, CancellationToken token)
+	private static void PushDirtyBands(TuringScreenRevA screen, int w, int h, byte[] frame, byte[]? prev, CancellationToken token)
 	{
 		var rowBytes = w * 2;
 		var full = prev is null;
-		var sent = 0;
 
 		for (var y = 0; y < h; y += BandHeight)
 		{
-			if (token.IsCancellationRequested)
-				return sent;
+			if (token.IsCancellationRequested) return;
 
 			var bandH = Math.Min(BandHeight, h - y);
 			var start = y * rowBytes;
@@ -281,9 +316,7 @@ public sealed class MonitorService : IDisposable
 				continue;
 
 			screen.DisplayRegionRaw(0, y, w, bandH, frame, start, len);
-			sent++;
 		}
 
-		return sent;
 	}
 }

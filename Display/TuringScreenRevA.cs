@@ -51,7 +51,7 @@ public sealed class TuringScreenRevA : IDisposable
 		}
 	}
 
-	public void Close()
+	private void Close()
 	{
 		lock (_ioLock)
 		{

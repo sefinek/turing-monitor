@@ -63,14 +63,14 @@ public sealed class ThemeEngine
 
 	public void RenderStatic()
 	{
-		foreach ((var _, ThemeNode node) in _config.StaticImages.Children())
+		foreach ((_, ThemeNode node) in _config.StaticImages.Children())
 		{
 			var path = _config.ResolvePath(node.GetString("PATH"));
 			if (File.Exists(path))
 				_painter.DisplayImage(path, node.GetInt("X"), node.GetInt("Y"), node.GetInt("WIDTH"), node.GetInt("HEIGHT"));
 		}
 
-		foreach ((var _, ThemeNode node) in _config.StaticText.Children())
+		foreach ((_, ThemeNode node) in _config.StaticText.Children())
 			DrawText(node, node.GetString("TEXT"), string.Empty, false);
 	}
 
@@ -120,8 +120,8 @@ public sealed class ThemeEngine
 		foreach (var ifaceName in NetInterfaces)
 		{
 			ThemeNode iface = net[ifaceName];
-			DrawText(iface["UPLOAD"]["TEXT"], Rate(s.NetUpKbps), string.Empty, true);
-			DrawText(iface["DOWNLOAD"]["TEXT"], Rate(s.NetDownKbps), string.Empty, true);
+			DrawText(iface["UPLOAD"]["TEXT"], NetRateFormatter.Format(s.NetUpKbps, NetUnits), string.Empty, true);
+			DrawText(iface["DOWNLOAD"]["TEXT"], NetRateFormatter.Format(s.NetDownKbps, NetUnits), string.Empty, true);
 		}
 
 		ThemeNode date = stats["DATE"];
@@ -232,16 +232,5 @@ public sealed class ThemeEngine
 	private static string F2(double v)
 	{
 		return v.ToString("0.00", Culture);
-	}
-
-	private string Rate(double kbps)
-	{
-		if (NetUnits == "bits")
-		{
-			var kbit = kbps * 8.0;
-			return kbit >= 1000 ? $"{kbit / 1000.0:0.0} Mbit/s" : $"{kbit:0} Kbit/s";
-		}
-
-		return kbps >= 1024 ? $"{kbps / 1024.0:0.0} MB/s" : $"{kbps:0} KB/s";
 	}
 }

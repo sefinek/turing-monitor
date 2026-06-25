@@ -36,8 +36,14 @@ public static class AppLog
 		if (!Logger.IsEnabled(level))
 			return;
 
-		var logEvent = new LogEventInfo(level, Logger.Name, message) { Exception = exception };
-		logEvent.Properties["ui"] = toUi;
+		var logEvent = new LogEventInfo(level, Logger.Name, message)
+		{
+			Exception = exception,
+			Properties =
+			{
+				["ui"] = toUi
+			}
+		};
 		Logger.Log(logEvent);
 	}
 }

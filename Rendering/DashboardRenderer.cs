@@ -113,8 +113,8 @@ public sealed class DashboardRenderer : IDisposable
 		var linkKBps = (NetLinkMbps > 0 ? NetLinkMbps : s.NetLinkMbps) * 125.0;
 		DrawMetric(g, 16, y, cardW, netCardH, "NETWORK", new[]
 		{
-			($"↓ {FormatRate(s.NetDownKbps)}", RateColor(s.NetDownKbps, linkKBps)),
-			($"↑ {FormatRate(s.NetUpKbps)}", RateColor(s.NetUpKbps, linkKBps))
+			($"↓ {NetRateFormatter.Format(s.NetDownKbps, NetUnits)}", RateColor(s.NetDownKbps, linkKBps)),
+			($"↑ {NetRateFormatter.Format(s.NetUpKbps, NetUnits)}", RateColor(s.NetUpKbps, linkKBps))
 		}, 0, NetColor, false);
 
 		return _bitmap!;
@@ -384,16 +384,5 @@ public sealed class DashboardRenderer : IDisposable
 	private static string FormatClock(double mhz)
 	{
 		return mhz <= 0 ? "— GHz" : $"{mhz / 1000.0:0.00} GHz";
-	}
-
-	private string FormatRate(double kbps)
-	{
-		if (NetUnits == "bits")
-		{
-			var kbit = kbps * 8.0;
-			return kbit >= 1000 ? $"{kbit / 1000.0:0.0} Mbit/s" : $"{kbit:0} Kbit/s";
-		}
-
-		return kbps >= 1024 ? $"{kbps / 1024.0:0.0} MB/s" : $"{kbps:0} KB/s";
 	}
 }

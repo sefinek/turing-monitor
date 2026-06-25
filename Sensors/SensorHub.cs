@@ -4,6 +4,7 @@ using System.IO;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using Microsoft.Win32;
 using NLog;
 
@@ -73,9 +74,12 @@ public sealed class SensorHub : IDisposable
 			return;
 
 		Logger.Info($"CPU: {_cpuName} (base {_cpuBaseMhz} MHz)");
-		Logger.Info(_cpuTempAvailable
-			? $"CPU temperature: {_cpuTempC:0}°C (WMI thermal zone)"
-			: "CPU temperature: unavailable (WMI MSAcpi_ThermalZoneTemperature not exposed)");
+		if (_cpuTempAvailable)
+			Logger.Info($"CPU temperature: {_cpuTempC:0}°C (WMI thermal zone)");
+		else if (!IsElevated())
+			Logger.Info("CPU temperature: unavailable (run the app as administrator to enable it)");
+		else
+			Logger.Info("CPU temperature: unavailable (WMI MSAcpi_ThermalZoneTemperature not exposed)");
 		Logger.Info(_gpu.Available ? $"GPU: {_gpu.Name}" : "GPU: none (NVIDIA NVML unavailable)");
 	}
 
@@ -304,6 +308,19 @@ public sealed class SensorHub : IDisposable
 		catch
 		{
 			return fallback;
+		}
+	}
+
+	private static bool IsElevated()
+	{
+		try
+		{
+			using WindowsIdentity identity = WindowsIdentity.GetCurrent();
+			return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
+		}
+		catch
+		{
+			return false;
 		}
 	}
 

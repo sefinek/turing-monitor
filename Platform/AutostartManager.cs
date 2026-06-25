@@ -1,6 +1,7 @@
 using Microsoft.Win32;
+using TuringMonitor.Logging;
 
-namespace TuringMonitor.Monitor;
+namespace TuringMonitor.Platform;
 
 public static class AutostartManager
 {
@@ -9,8 +10,16 @@ public static class AutostartManager
 
 	public static bool IsEnabled()
 	{
-		using RegistryKey? key = Registry.CurrentUser.OpenSubKey(RunKey);
-		return key?.GetValue(ValueName) is string;
+		try
+		{
+			using RegistryKey? key = Registry.CurrentUser.OpenSubKey(RunKey);
+			return key?.GetValue(ValueName) is string;
+		}
+		catch (Exception ex)
+		{
+			AppLog.Error(ex, "Failed to read autostart state");
+			return false;
+		}
 	}
 
 	public static void SetEnabled(bool enabled)

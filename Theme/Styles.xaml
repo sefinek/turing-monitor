@@ -138,6 +138,40 @@
 		</Setter>
 	</Style>
 
+	<Style x:Key="TrayMenuItem" TargetType="MenuItem">
+		<Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+		<Setter Property="Padding" Value="14,7" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="MenuItem">
+					<Border x:Name="bd" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+						<ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsHighlighted" Value="True">
+							<Setter TargetName="bd" Property="Background" Value="{StaticResource SurfaceHoverBrush}" />
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<Style x:Key="TrayMenu" TargetType="ContextMenu">
+		<Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+		<Setter Property="ItemContainerStyle" Value="{StaticResource TrayMenuItem}" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="ContextMenu">
+					<Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+					        BorderThickness="1" CornerRadius="8" Padding="4">
+						<StackPanel IsItemsHost="True" />
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
 	<Style x:Key="ComboItem" TargetType="ComboBoxItem">
 		<Setter Property="Foreground" Value="{StaticResource TextBrush}" />
 		<Setter Property="Padding" Value="12,7" />

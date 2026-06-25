@@ -27,19 +27,22 @@ internal static class ImageSerializer
 			unsafe
 			{
 				var basePtr = (byte*)data.Scan0;
-				var o = 0;
-				for (var y = 0; y < height; y++)
+				fixed (byte* outBase = output)
 				{
-					var row = basePtr + y * stride;
-					for (var x = 0; x < width; x++)
+					var op = outBase;
+					for (var y = 0; y < height; y++)
 					{
-						var b = row[x * 4 + 0];
-						var g = row[x * 4 + 1];
-						var r = row[x * 4 + 2];
+						var row = basePtr + y * stride;
+						for (var x = 0; x < width; x++)
+						{
+							var b = row[x * 4 + 0];
+							var g = row[x * 4 + 1];
+							var r = row[x * 4 + 2];
 
-						var rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-						output[o++] = (byte)(rgb565 & 0xFF);
-						output[o++] = (byte)((rgb565 >> 8) & 0xFF);
+							var rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+							*op++ = (byte)(rgb565 & 0xFF);
+							*op++ = (byte)(rgb565 >> 8);
+						}
 					}
 				}
 			}

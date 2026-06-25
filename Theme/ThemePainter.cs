@@ -9,6 +9,8 @@ namespace TuringMonitor.Theme;
 public sealed class ThemePainter : IDisposable
 {
 	private readonly Dictionary<(int X, int Y), (int Fill, int Color)> _barSig = new();
+
+	private readonly Graphics _canvasGraphics;
 	private readonly object _canvasLock = new();
 	private readonly FontCache _fonts = new();
 	private readonly Dictionary<string, Bitmap> _images = new();
@@ -21,6 +23,7 @@ public sealed class ThemePainter : IDisposable
 	{
 		_screen = screen;
 		Canvas = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+		_canvasGraphics = Graphics.FromImage(Canvas);
 	}
 
 	public Bitmap Canvas { get; }
@@ -31,6 +34,7 @@ public sealed class ThemePainter : IDisposable
 		foreach (Bitmap image in _images.Values)
 			image.Dispose();
 		_images.Clear();
+		_canvasGraphics.Dispose();
 		Canvas.Dispose();
 	}
 
@@ -277,10 +281,7 @@ public sealed class ThemePainter : IDisposable
 	{
 		lock (_canvasLock)
 		{
-			using (Graphics g = Graphics.FromImage(Canvas))
-			{
-				g.DrawImage(bitmap, x, y, bitmap.Width, bitmap.Height);
-			}
+			_canvasGraphics.DrawImage(bitmap, x, y, bitmap.Width, bitmap.Height);
 		}
 
 		_screen?.DisplayBitmap(bitmap, x, y);

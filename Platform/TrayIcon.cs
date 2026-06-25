@@ -6,7 +6,7 @@ using System.Windows.Interop;
 using System.Windows.Resources;
 using Size = System.Drawing.Size;
 
-namespace TuringMonitor.Monitor;
+namespace TuringMonitor.Platform;
 
 public sealed class TrayIcon : IDisposable
 {
