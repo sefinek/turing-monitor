@@ -10,7 +10,6 @@ namespace TuringMonitor;
 
 public partial class MainWindow
 {
-
 	private UpdateInfo? _updateInfo;
 	private static string AppVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0";
 
