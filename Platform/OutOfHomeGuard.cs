@@ -4,7 +4,7 @@ using TuringMonitor.Configuration;
 using TuringMonitor.Display;
 using TuringMonitor.Logging;
 
-namespace TuringMonitor.Monitor;
+namespace TuringMonitor.Platform;
 
 public static class OutOfHomeGuard
 {

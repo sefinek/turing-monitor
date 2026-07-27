@@ -3,7 +3,6 @@ using System.Windows;
 using NLog;
 using TuringMonitor.Configuration;
 using TuringMonitor.Logging;
-using TuringMonitor.Monitor;
 using TuringMonitor.Platform;
 
 namespace TuringMonitor;

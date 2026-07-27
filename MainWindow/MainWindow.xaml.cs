@@ -25,9 +25,9 @@ public partial class MainWindow : Window
 	private readonly Queue<string> _logLines = new();
 	private readonly MonitorService _service = new();
 	private readonly MonitorSettings _settings = SettingsStore.Load();
+	private bool _exiting;
 
 	private IntPtr _hwnd;
-	private bool _exiting;
 
 	public MainWindow()
 	{
