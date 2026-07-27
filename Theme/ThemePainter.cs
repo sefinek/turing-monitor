@@ -9,6 +9,7 @@ namespace TuringMonitor.Theme;
 public sealed class ThemePainter : IDisposable
 {
 	private readonly Dictionary<(int X, int Y), (int Fill, int Color)> _barSig = new();
+	private readonly Dictionary<(int X, int Y), (Bitmap Bitmap, Graphics Graphics)> _barSurfaces = new();
 
 	private readonly Graphics _canvasGraphics;
 	private readonly object _canvasLock = new();
@@ -16,8 +17,10 @@ public sealed class ThemePainter : IDisposable
 	private readonly Dictionary<string, Bitmap> _images = new();
 	private readonly Dictionary<(int X, int Y), Rectangle> _lastTextRect = new();
 	private readonly Dictionary<(int X, int Y), (int Sweep, string Text, int Color)> _radialSig = new();
+	private readonly Dictionary<(int X, int Y), (Bitmap Bitmap, Graphics Graphics)> _radialSurfaces = new();
 	private readonly TuringScreenRevA? _screen;
 	private readonly Dictionary<(int X, int Y), (string Text, int Fg, int Bg, int W, int H, string? BgImage)> _textSig = new();
+	private readonly Dictionary<(int X, int Y), (Bitmap Bitmap, Graphics Graphics)> _textSurfaces = new();
 
 	public ThemePainter(TuringScreenRevA? screen, int width, int height)
 	{
@@ -34,8 +37,41 @@ public sealed class ThemePainter : IDisposable
 		foreach (Bitmap image in _images.Values)
 			image.Dispose();
 		_images.Clear();
+		DisposeSurfaces(_textSurfaces);
+		DisposeSurfaces(_radialSurfaces);
+		DisposeSurfaces(_barSurfaces);
 		_canvasGraphics.Dispose();
 		Canvas.Dispose();
+	}
+
+	private static void DisposeSurfaces(Dictionary<(int X, int Y), (Bitmap Bitmap, Graphics Graphics)> surfaces)
+	{
+		foreach ((Bitmap bitmap, Graphics graphics) in surfaces.Values)
+		{
+			graphics.Dispose();
+			bitmap.Dispose();
+		}
+
+		surfaces.Clear();
+	}
+
+	private static (Bitmap Bitmap, Graphics Graphics) RentSurface(
+		Dictionary<(int X, int Y), (Bitmap Bitmap, Graphics Graphics)> surfaces,
+		(int X, int Y) key, int width, int height)
+	{
+		if (surfaces.TryGetValue(key, out (Bitmap Bitmap, Graphics Graphics) existing))
+		{
+			if (existing.Bitmap.Width == width && existing.Bitmap.Height == height)
+				return existing;
+
+			existing.Graphics.Dispose();
+			existing.Bitmap.Dispose();
+		}
+
+		var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+		var surface = (bitmap, Graphics.FromImage(bitmap));
+		surfaces[key] = surface;
+		return surface;
 	}
 
 	public void DisplayImage(string path, int x, int y, int width, int height)
@@ -106,23 +142,22 @@ public sealed class ThemePainter : IDisposable
 		var alignDx = align == "center" ? (boxW - contentW) / 2f
 			: align == "right" ? boxW - contentW : 0f;
 
-		using var bitmap = new Bitmap(canvasW, canvasH, PixelFormat.Format32bppArgb);
-		using (Graphics g = Graphics.FromImage(bitmap))
+		(Bitmap bitmap, Graphics g) = RentSurface(_textSurfaces, (x, y), canvasW, canvasH);
+		g.SmoothingMode = SmoothingMode.AntiAlias;
+
+		if (backgroundImage is not null)
+			DrawBackgroundRegionOpaque(g, backgroundImage, originX, originY, canvasW, canvasH);
+		else
+			g.Clear(backgroundColor);
+
+		using (var transform = new Matrix())
 		{
-			g.SmoothingMode = SmoothingMode.AntiAlias;
-
-			if (backgroundImage is not null)
-				DrawBackgroundRegion(g, backgroundImage, originX, originY, canvasW, canvasH);
-			else
-				g.Clear(backgroundColor);
-
-			using var transform = new Matrix();
 			transform.Translate(left - originX + alignDx - ink.X, top - originY - ink.Y);
 			path.Transform(transform);
-
-			using var brush = new SolidBrush(fontColor);
-			g.FillPath(brush, path);
 		}
+
+		using (var brush = new SolidBrush(fontColor))
+			g.FillPath(brush, path);
 
 		Blit(bitmap, originX, originY);
 	}
@@ -146,33 +181,30 @@ public sealed class ThemePainter : IDisposable
 			return;
 		_radialSig[(xc, yc)] = radialSig;
 
-		using var bitmap = new Bitmap(diameter, diameter, PixelFormat.Format32bppArgb);
-		using (Graphics g = Graphics.FromImage(bitmap))
+		(Bitmap bitmap, Graphics g) = RentSurface(_radialSurfaces, (xc, yc), diameter, diameter);
+		g.SmoothingMode = SmoothingMode.AntiAlias;
+		g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+
+		if (backgroundImage is not null)
+			DrawBackgroundRegionOpaque(g, backgroundImage, xc - radius, yc - radius, diameter, diameter);
+		else
+			g.Clear(backgroundColor);
+
+		if (drawBarBackground)
+			FillRing(g, diameter, radius, innerRadius, angleStart, span, clockwise, barBackgroundColor);
+
+		FillRing(g, diameter, radius, innerRadius, angleStart, span * fraction, clockwise, barColor);
+
+		if (!string.IsNullOrEmpty(text))
 		{
-			g.SmoothingMode = SmoothingMode.AntiAlias;
-			g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-
-			if (backgroundImage is not null)
-				DrawBackgroundRegion(g, backgroundImage, xc - radius, yc - radius, diameter, diameter);
-			else
-				g.Clear(backgroundColor);
-
-			if (drawBarBackground)
-				FillRing(g, diameter, radius, innerRadius, angleStart, span, clockwise, barBackgroundColor);
-
-			FillRing(g, diameter, radius, innerRadius, angleStart, span * fraction, clockwise, barColor);
-
-			if (!string.IsNullOrEmpty(text))
+			Font font = _fonts.Get(fontPath, fontSize);
+			using var brush = new SolidBrush(fontColor);
+			using var format = new StringFormat
 			{
-				Font font = _fonts.Get(fontPath, fontSize);
-				using var brush = new SolidBrush(fontColor);
-				using var format = new StringFormat
-				{
-					Alignment = StringAlignment.Center,
-					LineAlignment = StringAlignment.Center
-				};
-				g.DrawString(text, font, brush, new RectangleF(0, 0, diameter, diameter), format);
-			}
+				Alignment = StringAlignment.Center,
+				LineAlignment = StringAlignment.Center
+			};
+			g.DrawString(text, font, brush, new RectangleF(0, 0, diameter, diameter), format);
 		}
 
 		Blit(bitmap, xc - radius, yc - radius);
@@ -247,15 +279,15 @@ public sealed class ThemePainter : IDisposable
 			return;
 		_barSig[(x, y)] = barSig;
 
-		using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-		using (Graphics g = Graphics.FromImage(bitmap))
-		{
-			if (backgroundImage is not null)
-				DrawBackgroundRegion(g, backgroundImage, x, y, width, height);
-			else
-				g.Clear(backgroundColor);
+		(Bitmap bitmap, Graphics g) = RentSurface(_barSurfaces, (x, y), width, height);
 
-			using var brush = new SolidBrush(barColor);
+		if (backgroundImage is not null)
+			DrawBackgroundRegionOpaque(g, backgroundImage, x, y, width, height);
+		else
+			g.Clear(backgroundColor);
+
+		using (var brush = new SolidBrush(barColor))
+		{
 			if (width > height)
 			{
 				if (fill > 0)
@@ -266,12 +298,12 @@ public sealed class ThemePainter : IDisposable
 				if (fill > 0)
 					g.FillRectangle(brush, 0, height - 1 - fill, width - 1, fill);
 			}
+		}
 
-			if (barOutline)
-			{
-				using var pen = new Pen(barColor);
-				g.DrawRectangle(pen, 0, 0, width - 1, height - 1);
-			}
+		if (barOutline)
+		{
+			using var pen = new Pen(barColor);
+			g.DrawRectangle(pen, 0, 0, width - 1, height - 1);
 		}
 
 		Blit(bitmap, x, y);
@@ -287,11 +319,13 @@ public sealed class ThemePainter : IDisposable
 		_screen?.DisplayBitmap(bitmap, x, y);
 	}
 
-	private void DrawBackgroundRegion(Graphics g, string backgroundImage, int x, int y, int width, int height)
+	private void DrawBackgroundRegionOpaque(Graphics g, string backgroundImage, int x, int y, int width, int height)
 	{
 		Bitmap background = LoadImage(backgroundImage);
 		var source = new Rectangle(x, y, width, height);
+		g.CompositingMode = CompositingMode.SourceCopy;
 		g.DrawImage(background, new Rectangle(0, 0, width, height), source, GraphicsUnit.Pixel);
+		g.CompositingMode = CompositingMode.SourceOver;
 	}
 
 	private Bitmap LoadImage(string path)

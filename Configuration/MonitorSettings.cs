@@ -23,4 +23,5 @@ public sealed class MonitorSettings
 	public bool ExitWhenNoEthernet { get; set; }
 	public bool ExitWhenAway { get; set; }
 	public bool AutoReconnect { get; set; } = true;
+	public bool CheckForUpdates { get; set; } = true;
 }

@@ -40,6 +40,7 @@ public partial class MainWindow : Window
 
 		InitializeOptionLists();
 		InitializeVersion();
+		CheckForUpdatesIfEnabled();
 
 		RefreshPorts();
 		ApplySettingsToUi();

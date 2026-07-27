@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.NetworkInformation;
 using System.Windows;
 using System.Windows.Controls;
@@ -146,6 +147,7 @@ public partial class MainWindow
 		_settings.ExitWhenNoEthernet = chkExitWhenNoEthernet.IsChecked == true;
 		_settings.ExitWhenAway = chkExitWhenAway.IsChecked == true;
 		_settings.AutoReconnect = chkAutoReconnect.IsChecked == true;
+		_settings.CheckForUpdates = chkCheckForUpdates.IsChecked == true;
 
 		try
 		{
@@ -170,21 +172,8 @@ public partial class MainWindow
 
 		sldBrightness.Value = _settings.Brightness;
 
-		foreach (OrientationOption item in cmbOrientation.Items)
-			if (item.Value == _settings.Orientation)
-			{
-				cmbOrientation.SelectedItem = item;
-				break;
-			}
-
-		foreach (IntervalOption item in cmbInterval.Items)
-			if (item.Ms == _settings.IntervalMs)
-			{
-				cmbInterval.SelectedItem = item;
-				break;
-			}
-
-		cmbInterval.SelectedItem ??= cmbInterval.Items[0];
+		SelectOrDefault<OrientationOption>(cmbOrientation, o => o.Value == _settings.Orientation);
+		SelectOrDefault<IntervalOption>(cmbInterval, i => i.Ms == _settings.IntervalMs);
 
 		chkResetOnStartup.IsChecked = _settings.ResetOnStartup;
 		chkStartMinimized.IsChecked = _settings.StartMinimized;
@@ -193,73 +182,32 @@ public partial class MainWindow
 		chkExitWhenNoEthernet.IsChecked = _settings.ExitWhenNoEthernet;
 		chkExitWhenAway.IsChecked = _settings.ExitWhenAway;
 		chkAutoReconnect.IsChecked = _settings.AutoReconnect;
+		chkCheckForUpdates.IsChecked = _settings.CheckForUpdates;
 
 		txtTimeFormat.Text = _settings.TimeFormat;
 		txtDateFormat.Text = _settings.DateFormat;
 
-		foreach (LocaleOption item in cmbLocale.Items)
-			if (item.Culture == _settings.DateCulture)
-			{
-				cmbLocale.SelectedItem = item;
-				break;
-			}
+		SelectOrDefault<LocaleOption>(cmbLocale, l => l.Culture == _settings.DateCulture);
+		SelectOrDefault<LinkSpeedOption>(cmbLinkSpeed, l => l.Mbps == _settings.NetLinkMbps);
+		SelectOrDefault<UnitsOption>(cmbUnits, u => u.Value == _settings.NetUnits);
 
-		cmbLocale.SelectedItem ??= cmbLocale.Items[0];
-
-		foreach (LinkSpeedOption item in cmbLinkSpeed.Items)
-			if (item.Mbps == _settings.NetLinkMbps)
-			{
-				cmbLinkSpeed.SelectedItem = item;
-				break;
-			}
-
-		cmbLinkSpeed.SelectedItem ??= cmbLinkSpeed.Items[0];
-
-		foreach (UnitsOption item in cmbUnits.Items)
-			if (item.Value == _settings.NetUnits)
-			{
-				cmbUnits.SelectedItem = item;
-				break;
-			}
-
-		cmbUnits.SelectedItem ??= cmbUnits.Items[0];
-
-		foreach (NetInterfaceOption item in cmbNetInterface.Items)
-			if (item.Id == _settings.NetInterface)
-			{
-				cmbNetInterface.SelectedItem = item;
-				break;
-			}
-
-		cmbNetInterface.SelectedItem ??= cmbNetInterface.Items[0];
+		SelectOrDefault<NetInterfaceOption>(cmbNetInterface, n => n.Id == _settings.NetInterface);
 		_settings.NetInterface = (cmbNetInterface.SelectedItem as NetInterfaceOption)?.Id ?? "";
 
-		foreach (DiskOption item in cmbDisk.Items)
-			if (item.Root == _settings.DiskDrive)
-			{
-				cmbDisk.SelectedItem = item;
-				break;
-			}
-
-		cmbDisk.SelectedItem ??= cmbDisk.Items[0];
+		SelectOrDefault<DiskOption>(cmbDisk, d => d.Root == _settings.DiskDrive);
 		_settings.DiskDrive = (cmbDisk.SelectedItem as DiskOption)?.Root ?? "";
 
-		foreach (ThemeItem item in cmbTheme.Items)
-		{
-			var match = string.IsNullOrEmpty(_settings.ThemeName)
-				? item.IsDashboard
-				: !item.IsDashboard && item.Name == _settings.ThemeName;
-			if (match)
-			{
-				cmbTheme.SelectedItem = item;
-				break;
-			}
-		}
-
-		cmbTheme.SelectedItem ??= cmbTheme.Items[0];
+		SelectOrDefault<ThemeItem>(cmbTheme, t => string.IsNullOrEmpty(_settings.ThemeName)
+			? t.IsDashboard
+			: !t.IsDashboard && t.Name == _settings.ThemeName);
 
 		if (_settings.StartMinimized)
 			WindowState = WindowState.Minimized;
+	}
+
+	private static void SelectOrDefault<T>(ComboBox combo, Func<T, bool> predicate) where T : class
+	{
+		combo.SelectedItem = combo.Items.OfType<T>().FirstOrDefault(predicate) ?? combo.Items[0];
 	}
 
 	private void RefreshPorts()

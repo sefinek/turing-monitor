@@ -1,7 +1,5 @@
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Management;
+using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -12,87 +10,57 @@ namespace TuringMonitor.Sensors;
 
 public sealed class SensorHub : IDisposable
 {
+	private const int InterfaceRefreshSeconds = 15;
 
 	private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 	private readonly int _cpuBaseMhz;
 	private readonly string _cpuName;
 
-	private readonly PerformanceCounter? _cpuPerfCounter;
-
-	private readonly NvidiaGpu _gpu = new();
+	private readonly HardwareMonitor _hardware;
 
 	private readonly Dictionary<string, (long Recv, long Sent)> _netPrev = new();
 	private readonly string _systemDriveRoot;
-	private bool _cpuTempAvailable;
 
-	private double _cpuTempC;
-	private DateTime _cpuTempNextRead;
 	private bool _hasCpuBaseline;
 	private bool _hasNetBaseline;
 
+	private List<NetworkInterface> _cachedInterfaces = new();
+	private DateTime _interfacesNextRefresh;
+
 	private ulong _prevIdle, _prevKernel, _prevUser;
 	private DateTime _prevNetTime;
-	private ManagementObjectSearcher? _thermalSearcher;
 
 	public SensorHub(bool log = true)
 	{
 		_cpuName = ReadRegistryString(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0", "ProcessorNameString", "CPU");
 		_cpuBaseMhz = ReadRegistryInt(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0", "~MHz", 0);
 		_systemDriveRoot = Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\";
-
-		try
-		{
-			_cpuPerfCounter = new PerformanceCounter("Processor Information", "% Processor Performance", "_Total");
-			_cpuPerfCounter.NextValue();
-		}
-		catch
-		{
-			_cpuPerfCounter = null;
-		}
-
-		_gpu.TryInitialize();
-
-		try
-		{
-			var scope = new ManagementScope(@"\\.\root\WMI");
-			var query = new ObjectQuery("SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
-			_thermalSearcher = new ManagementObjectSearcher(scope, query);
-			ReadCpuTemp(true);
-		}
-		catch
-		{
-			_thermalSearcher = null;
-		}
-
-		if (!_cpuTempAvailable)
-		{
-			_thermalSearcher?.Dispose();
-			_thermalSearcher = null;
-		}
+		_hardware = new HardwareMonitor(_cpuBaseMhz);
 
 		if (!log)
 			return;
 
 		Logger.Info($"CPU: {_cpuName} (base {_cpuBaseMhz} MHz)");
-		if (_cpuTempAvailable)
-			Logger.Info($"CPU temperature: {_cpuTempC:0}°C (WMI thermal zone)");
+
+		_hardware.Read(new SystemStats());
+		if (_hardware.CpuTemperatureAvailable)
+			Logger.Info("CPU temperature: available");
 		else if (!IsElevated())
-			Logger.Info("CPU temperature: unavailable (run the app as administrator to enable it)");
+			Logger.Info("CPU temperature: unavailable - run the app as administrator to enable it");
 		else
-			Logger.Info("CPU temperature: unavailable (WMI MSAcpi_ThermalZoneTemperature not exposed)");
-		Logger.Info(_gpu.Available ? $"GPU: {_gpu.Name}" : "GPU: none (NVIDIA NVML unavailable)");
+			Logger.Info("CPU temperature: unavailable on this hardware");
+
+		Logger.Info(_hardware.GpuAvailable ? $"GPU: {_hardware.GpuName}" : "GPU: none detected");
 	}
 
-	public bool GpuAvailable => _gpu.Available;
+	public bool GpuAvailable => _hardware.GpuAvailable;
 
 	public string? NetInterfaceId { get; set; }
 	public string DiskRoot { get; set; } = "";
 
 	public void Dispose()
 	{
-		_cpuPerfCounter?.Dispose();
-		_thermalSearcher?.Dispose();
-		_gpu.Dispose();
+		_hardware.Dispose();
 	}
 
 	[DllImport("kernel32.dll", SetLastError = true)]
@@ -108,56 +76,16 @@ public sealed class SensorHub : IDisposable
 		{
 			CpuName = _cpuName,
 			CpuLoadPercent = ReadCpuLoad(),
-			CpuClockMhz = ReadCpuClock()
+			CpuClockMhz = _cpuBaseMhz
 		};
 
-		ReadCpuTemp();
-		stats.CpuTempAvailable = _cpuTempAvailable;
-		stats.CpuTempC = _cpuTempC;
+		_hardware.Read(stats);
 
 		ReadMemory(stats);
 		ReadDisk(stats);
 		ReadNetwork(stats);
-		_gpu.Read(stats);
 
 		return stats;
-	}
-
-	private void ReadCpuTemp(bool force = false)
-	{
-		if (_thermalSearcher is null)
-			return;
-
-		DateTime now = DateTime.UtcNow;
-		if (!force && now < _cpuTempNextRead)
-			return;
-		_cpuTempNextRead = now.AddSeconds(3);
-
-		try
-		{
-			var best = double.NaN;
-			foreach (ManagementBaseObject obj in _thermalSearcher.Get())
-			{
-				var raw = obj["CurrentTemperature"];
-				if (raw is null)
-					continue;
-
-				var celsius = Convert.ToDouble(raw, CultureInfo.InvariantCulture) / 10.0 - 273.15;
-				if (celsius > 0 && celsius < 150 && (double.IsNaN(best) || celsius > best))
-					best = celsius;
-			}
-
-			if (!double.IsNaN(best))
-			{
-				_cpuTempC = best;
-				_cpuTempAvailable = true;
-			}
-		}
-		catch
-		{
-			_thermalSearcher?.Dispose();
-			_thermalSearcher = null;
-		}
 	}
 
 	private double ReadCpuLoad()
@@ -190,22 +118,6 @@ public sealed class SensorHub : IDisposable
 
 		double busy = total - idleDelta;
 		return Math.Clamp(busy / total * 100.0, 0, 100);
-	}
-
-	private double ReadCpuClock()
-	{
-		if (_cpuPerfCounter is null || _cpuBaseMhz <= 0)
-			return _cpuBaseMhz;
-
-		try
-		{
-			double performance = _cpuPerfCounter.NextValue();
-			return _cpuBaseMhz * performance / 100.0;
-		}
-		catch
-		{
-			return _cpuBaseMhz;
-		}
 	}
 
 	private static void ReadMemory(SystemStats stats)
@@ -251,40 +163,37 @@ public sealed class SensorHub : IDisposable
 		var bestDelta = -1L;
 		long maxSpeed = 0;
 
-		try
+		foreach (NetworkInterface ni in GetInterfaces())
 		{
-			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+			long speed;
+			IPv4InterfaceStatistics ipStats;
+			try
 			{
-				if (ni.OperationalStatus != OperationalStatus.Up)
-					continue;
-				if (ni.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
-					continue;
-				if (!string.IsNullOrEmpty(NetInterfaceId) && ni.Id != NetInterfaceId)
-					continue;
-
-				if (ni.Speed > maxSpeed)
-					maxSpeed = ni.Speed;
-
-				IPv4InterfaceStatistics s = ni.GetIPv4Statistics();
-				long recv = s.BytesReceived, sent = s.BytesSent;
-
-				if (_hasNetBaseline && seconds > 0 && _netPrev.TryGetValue(ni.Id, out (long Recv, long Sent) prev))
-				{
-					var delta = recv - prev.Recv + (sent - prev.Sent);
-					if (delta > bestDelta)
-					{
-						bestDelta = delta;
-						down = Math.Max(0, recv - prev.Recv) / seconds / 1024.0;
-						up = Math.Max(0, sent - prev.Sent) / seconds / 1024.0;
-					}
-				}
-
-				_netPrev[ni.Id] = (recv, sent);
+				speed = ni.Speed;
+				ipStats = ni.GetIPv4Statistics();
 			}
-		}
-		catch
-		{
-			return;
+			catch
+			{
+				continue;
+			}
+
+			if (speed > maxSpeed)
+				maxSpeed = speed;
+
+			long recv = ipStats.BytesReceived, sent = ipStats.BytesSent;
+
+			if (_hasNetBaseline && seconds > 0 && _netPrev.TryGetValue(ni.Id, out (long Recv, long Sent) prev))
+			{
+				var delta = recv - prev.Recv + (sent - prev.Sent);
+				if (delta > bestDelta)
+				{
+					bestDelta = delta;
+					down = Math.Max(0, recv - prev.Recv) / seconds / 1024.0;
+					up = Math.Max(0, sent - prev.Sent) / seconds / 1024.0;
+				}
+			}
+
+			_netPrev[ni.Id] = (recv, sent);
 		}
 
 		stats.NetLinkMbps = maxSpeed > 0 ? maxSpeed / 1_000_000.0 : 0;
@@ -296,6 +205,29 @@ public sealed class SensorHub : IDisposable
 
 		stats.NetDownKbps = down;
 		stats.NetUpKbps = up;
+	}
+
+	private List<NetworkInterface> GetInterfaces()
+	{
+		DateTime now = DateTime.UtcNow;
+		if (now < _interfacesNextRefresh)
+			return _cachedInterfaces;
+
+		_interfacesNextRefresh = now.AddSeconds(InterfaceRefreshSeconds);
+		try
+		{
+			_cachedInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+				.Where(ni => ni.OperationalStatus == OperationalStatus.Up)
+				.Where(ni => ni.NetworkInterfaceType is not (NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel))
+				.Where(ni => string.IsNullOrEmpty(NetInterfaceId) || ni.Id == NetInterfaceId)
+				.ToList();
+		}
+		catch
+		{
+			_cachedInterfaces = new List<NetworkInterface>();
+		}
+
+		return _cachedInterfaces;
 	}
 
 	private static string ReadRegistryString(string path, string name, string fallback)

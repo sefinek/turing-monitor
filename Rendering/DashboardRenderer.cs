@@ -9,6 +9,8 @@ namespace TuringMonitor.Rendering;
 
 public sealed class DashboardRenderer : IDisposable
 {
+	private const int HeaderHeight = 64;
+
 	private static readonly Color Background = Color.FromArgb(16, 18, 24);
 	private static readonly Color CardColor = Color.FromArgb(26, 30, 40);
 	private static readonly Color TrackColor = Color.FromArgb(44, 50, 64);
@@ -49,6 +51,11 @@ public sealed class DashboardRenderer : IDisposable
 	private int _height;
 	private int _width;
 
+	private (string Time, string Date)? _headerSig;
+	private MetricSignature? _cpuSig, _ramSig, _gpuSig, _diskSig, _netSig;
+
+	private readonly record struct MetricSignature(string Label, string Values, string PercentText, int PercentColorArgb, int FillPx);
+
 	public string TimeFormat { get; set; } = "HH:mm:ss";
 	public string DateFormat { get; set; } = "ddd, dd MMM";
 	public string Culture { get; set; } = "";
@@ -74,44 +81,40 @@ public sealed class DashboardRenderer : IDisposable
 	public Bitmap Render(SystemStats s, int width, int height)
 	{
 		Graphics g = EnsureCanvas(width, height);
-		g.Clear(Background);
 
-		DateTime now = s.Timestamp;
-		DrawString(g, FormatTime(now), _titleFont, TextColor, 16, 8);
-		DrawStringRight(g, FormatDate(now), _dateFont, MutedColor, width - 16, 8);
+		DrawHeader(g, width, s.Timestamp);
 
-		const int top = 64;
 		const int gap = 8;
 		const int netCardH = 34;
 		var cardW = width - 32;
 
-		var barCardH = Math.Max(34, (height - top - gap - netCardH - 4 * gap) / 4);
+		var barCardH = Math.Max(34, (height - HeaderHeight - gap - netCardH - 4 * gap) / 4);
 
-		var y = top;
+		var y = HeaderHeight;
 		var cpu = new List<(string, Color)> { ($"{FormatClock(s.CpuClockMhz)}", TextColor) };
 		if (s.CpuTempAvailable)
 			cpu.Add(($"{s.CpuTempC:0}°C", TempColor(s.CpuTempC)));
-		DrawMetric(g, 16, y, cardW, barCardH, CpuLabel(s.CpuName), cpu, s.CpuLoadPercent, CpuColor);
+		DrawMetric(ref _cpuSig, g, 16, y, cardW, barCardH, CpuLabel(s.CpuName), cpu, s.CpuLoadPercent, CpuColor);
 		y += barCardH + gap;
 
-		DrawMetric(g, 16, y, cardW, barCardH, "RAM",
+		DrawMetric(ref _ramSig, g, 16, y, cardW, barCardH, "RAM",
 			new[] { ($"{s.RamUsedGb:0.0}/{s.RamTotalGb:0.0} GB", TextColor) }, s.RamUsedPercent, RamColor);
 		y += barCardH + gap;
 
 		if (s.GpuAvailable)
-			DrawMetric(g, 16, y, cardW, barCardH, GpuLabel(s.GpuName),
+			DrawMetric(ref _gpuSig, g, 16, y, cardW, barCardH, GpuLabel(s.GpuName),
 				new[] { ($"{s.GpuTempC:0}°C", TempColor(s.GpuTempC)) }, s.GpuLoadPercent, GpuColor);
 		else
-			DrawMetric(g, 16, y, cardW, barCardH, "GPU", new[] { ("no NVIDIA", TextColor) }, 0, GpuColor, false);
+			DrawMetric(ref _gpuSig, g, 16, y, cardW, barCardH, "GPU", new[] { ("no NVIDIA", TextColor) }, 0, GpuColor, false);
 		y += barCardH + gap;
 
 		var diskLabel = string.IsNullOrEmpty(s.DiskName) ? "DISK" : $"DISK {s.DiskName}";
-		DrawMetric(g, 16, y, cardW, barCardH, diskLabel,
+		DrawMetric(ref _diskSig, g, 16, y, cardW, barCardH, diskLabel,
 			new[] { ($"{s.DiskUsedGb:0}/{s.DiskTotalGb:0} GB", TextColor) }, s.DiskUsedPercent, DiskColor);
 		y += barCardH + gap;
 
 		var linkKBps = (NetLinkMbps > 0 ? NetLinkMbps : s.NetLinkMbps) * 125.0;
-		DrawMetric(g, 16, y, cardW, netCardH, "NETWORK", new[]
+		DrawMetric(ref _netSig, g, 16, y, cardW, netCardH, "NETWORK", new[]
 		{
 			($"↓ {NetRateFormatter.Format(s.NetDownKbps, NetUnits)}", RateColor(s.NetDownKbps, linkKBps)),
 			($"↑ {NetRateFormatter.Format(s.NetUpKbps, NetUnits)}", RateColor(s.NetUpKbps, linkKBps))
@@ -133,17 +136,49 @@ public sealed class DashboardRenderer : IDisposable
 		_graphics.SmoothingMode = SmoothingMode.AntiAlias;
 		_graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 		_graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+		_graphics.Clear(Background);
 		_width = width;
 		_height = height;
+
+		_headerSig = null;
+		_cpuSig = _ramSig = _gpuSig = _diskSig = _netSig = null;
+
 		return _graphics;
 	}
 
-	private void DrawMetric(Graphics g, int x, int y, int w, int h,
+	private void DrawHeader(Graphics g, int width, DateTime now)
+	{
+		var sig = (FormatTime(now), FormatDate(now));
+		if (_headerSig is { } prev && prev == sig)
+			return;
+		_headerSig = sig;
+
+		g.FillRectangle(Brush(Background), 0, 0, width, HeaderHeight);
+		DrawString(g, sig.Item1, _titleFont, TextColor, 16, 8);
+		DrawStringRight(g, sig.Item2, _dateFont, MutedColor, width - 16, 8);
+	}
+
+	private void DrawMetric(ref MetricSignature? cache, Graphics g, int x, int y, int w, int h,
 		string label, IReadOnlyList<(string Text, Color Color)> value, double percent, Color accent, bool drawBar = true)
 	{
-		FillRoundedRect(g, new Rectangle(x, y, w, h), 8, CardColor);
-
 		const int pad = 14;
+		const int percentZone = 78;
+		const int barH = 10;
+
+		var infoRight = x + w - pad - percentZone;
+		var barX = x + pad;
+		var barW = infoRight - barX;
+
+		var percentText = drawBar ? $"{percent:0}%" : string.Empty;
+		var percentColorArgb = drawBar ? LoadColor(percent).ToArgb() : 0;
+		var fillPx = drawBar && barW >= barH ? (int)Math.Round(barW * Math.Clamp(percent, 0, 100) / 100.0) : 0;
+
+		var sig = new MetricSignature(label, BuildValuesKey(value), percentText, percentColorArgb, fillPx);
+		if (cache is { } prevSig && prevSig == sig)
+			return;
+		cache = sig;
+
+		FillRoundedRect(g, new Rectangle(x, y, w, h), 8, CardColor);
 
 		if (!drawBar)
 		{
@@ -152,11 +187,7 @@ public sealed class DashboardRenderer : IDisposable
 			return;
 		}
 
-		const int percentZone = 78;
-		var infoRight = x + w - pad - percentZone;
-
-		var percentText = $"{percent:0}%";
-		_segmentBrush.Color = LoadColor(percent);
+		_segmentBrush.Color = Color.FromArgb(percentColorArgb);
 		var percentW = MeasureWidth(g, percentText, _percentFont);
 		g.DrawString(percentText, _percentFont, _segmentBrush,
 			x + w - pad - percentW, y + (h - _percentFont.GetHeight()) / 2f - 2, StringFormat.GenericTypographic);
@@ -164,19 +195,19 @@ public sealed class DashboardRenderer : IDisposable
 		DrawString(g, label, _labelFont, accent, x + pad, y + 2);
 		DrawSegmentsRight(g, value, _valueFont, infoRight, y + 4);
 
-		var barX = x + pad;
 		var barY = y + h - 15;
-		var barW = infoRight - barX;
-		const int barH = 10;
-
 		if (barW < barH)
 			return;
 
 		FillRoundedRect(g, new Rectangle(barX, barY, barW, barH), 5, TrackColor);
 
-		var fill = (int)Math.Round(barW * Math.Clamp(percent, 0, 100) / 100.0);
-		if (fill > 0)
-			FillRoundedRect(g, new Rectangle(barX, barY, Math.Max(fill, barH), barH), 5, accent);
+		if (fillPx > 0)
+			FillRoundedRect(g, new Rectangle(barX, barY, Math.Max(fillPx, barH), barH), 5, accent);
+	}
+
+	private static string BuildValuesKey(IReadOnlyList<(string Text, Color Color)> value)
+	{
+		return string.Join('|', value.Select(v => v.Text + '#' + v.Color.ToArgb()));
 	}
 
 	private string FormatTime(DateTime now)

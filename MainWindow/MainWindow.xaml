@@ -193,8 +193,11 @@
 								<CheckBox x:Name="chkAutoStartMonitor" Style="{StaticResource ToggleSwitch}"
 								          Content="Start monitoring on launch" Margin="0,0,0,14" />
 								<CheckBox x:Name="chkAutoReconnect" Style="{StaticResource ToggleSwitch}"
-								          Content="Auto-reconnect to display" Margin="0,0,0,24"
+								          Content="Auto-reconnect to display" Margin="0,0,0,14"
 								          ToolTip="When the display disconnects, automatically try to reconnect every 5 seconds until it is found again or you press Stop." />
+								<CheckBox x:Name="chkCheckForUpdates" Style="{StaticResource ToggleSwitch}"
+								          Content="Check for updates on startup" Margin="0,0,0,24"
+								          ToolTip="On launch, checks GitHub for a newer release. If one is found, the version label in the top-left corner turns into a link to the release page." />
 
 								<TextBlock Text="General" Style="{StaticResource GroupHeader}" />
 								<TextBlock Text="REFRESH INTERVAL" Style="{StaticResource SectionLabel}" />
