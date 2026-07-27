@@ -4,7 +4,7 @@ Windows (WPF) application for hardware monitoring on small USB screens of the **
 
 <p align="center">
   <img src=".github/app-window.png" alt="Turing Monitor application window" height="250">
-<img src=".github/dashboard.png" alt="Turing Monitor running the built-in dashboard on a 3.5&quot; screen" height="250">
+  <img src=".github/dashboard.png" alt="Turing Monitor running the built-in dashboard on a 3.5&quot; screen" height="250">
 </p>
 
 > [!WARNING]
