@@ -45,16 +45,14 @@ public sealed class DashboardRenderer : IDisposable
 	private string _cpuLabel = "CPU";
 
 	private string _cpuName = "";
+	private MetricSignature? _cpuSig, _ramSig, _gpuSig, _diskSig, _netSig;
 	private string _gpuLabel = "GPU";
 	private string _gpuName = "";
 	private Graphics? _graphics;
-	private int _height;
-	private int _width;
 
 	private (string Time, string Date)? _headerSig;
-	private MetricSignature? _cpuSig, _ramSig, _gpuSig, _diskSig, _netSig;
-
-	private readonly record struct MetricSignature(string Label, string Values, string PercentText, int PercentColorArgb, int FillPx);
+	private int _height;
+	private int _width;
 
 	public string TimeFormat { get; set; } = "HH:mm:ss";
 	public string DateFormat { get; set; } = "ddd, dd MMM";
@@ -148,7 +146,7 @@ public sealed class DashboardRenderer : IDisposable
 
 	private void DrawHeader(Graphics g, int width, DateTime now)
 	{
-		var sig = (FormatTime(now), FormatDate(now));
+		(string, string) sig = (FormatTime(now), FormatDate(now));
 		if (_headerSig is { } prev && prev == sig)
 			return;
 		_headerSig = sig;
@@ -416,4 +414,6 @@ public sealed class DashboardRenderer : IDisposable
 	{
 		return mhz <= 0 ? "— GHz" : $"{mhz / 1000.0:0.00} GHz";
 	}
+
+	private readonly record struct MetricSignature(string Label, string Values, string PercentText, int PercentColorArgb, int FillPx);
 }

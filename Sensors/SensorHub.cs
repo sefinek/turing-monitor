@@ -1,5 +1,4 @@
 using System.IO;
-using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -21,10 +20,10 @@ public sealed class SensorHub : IDisposable
 	private readonly Dictionary<string, (long Recv, long Sent)> _netPrev = new();
 	private readonly string _systemDriveRoot;
 
+	private List<NetworkInterface> _cachedInterfaces = new();
+
 	private bool _hasCpuBaseline;
 	private bool _hasNetBaseline;
-
-	private List<NetworkInterface> _cachedInterfaces = new();
 	private DateTime _interfacesNextRefresh;
 
 	private ulong _prevIdle, _prevKernel, _prevUser;

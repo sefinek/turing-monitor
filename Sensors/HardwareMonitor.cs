@@ -6,15 +6,11 @@ namespace TuringMonitor.Sensors;
 public sealed class HardwareMonitor : IDisposable
 {
 	private readonly Computer _computer;
-	private readonly UpdateVisitor _visitor = new();
 	private readonly IHardware? _cpu;
-	private readonly IHardware? _gpu;
-	private readonly PerformanceCounter? _cpuPerfCounter;
 	private readonly int _cpuBaseMhz;
-
-	public bool CpuTemperatureAvailable { get; private set; }
-	public bool GpuAvailable => _gpu is not null;
-	public string GpuName => _gpu?.Name ?? "GPU";
+	private readonly PerformanceCounter? _cpuPerfCounter;
+	private readonly IHardware? _gpu;
+	private readonly UpdateVisitor _visitor = new();
 
 	public HardwareMonitor(int cpuBaseMhz)
 	{
@@ -25,8 +21,8 @@ public sealed class HardwareMonitor : IDisposable
 
 		_cpu = _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.Cpu);
 		_gpu = _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuNvidia)
-			?? _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuAmd)
-			?? _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuIntel);
+		       ?? _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuAmd)
+		       ?? _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuIntel);
 
 		// LHM only exposes per-core clock sensors when running elevated. Without admin rights,
 		// fall back to this performance counter, which gives a turbo-adjusted estimate and needs no elevation.
@@ -40,6 +36,10 @@ public sealed class HardwareMonitor : IDisposable
 			_cpuPerfCounter = null;
 		}
 	}
+
+	public bool CpuTemperatureAvailable { get; private set; }
+	public bool GpuAvailable => _gpu is not null;
+	public string GpuName => _gpu?.Name ?? "GPU";
 
 	public void Dispose()
 	{
@@ -89,7 +89,6 @@ public sealed class HardwareMonitor : IDisposable
 			return meanCoreClock;
 
 		if (_cpuPerfCounter is not null && _cpuBaseMhz > 0)
-		{
 			try
 			{
 				double performance = _cpuPerfCounter.NextValue();
@@ -98,7 +97,6 @@ public sealed class HardwareMonitor : IDisposable
 			catch
 			{
 			}
-		}
 
 		return _cpuBaseMhz;
 	}
@@ -115,10 +113,10 @@ public sealed class HardwareMonitor : IDisposable
 	private static double CpuTemperature(IHardware cpu)
 	{
 		return FindTemperature(cpu, "Core Average")
-			?? FindTemperature(cpu, "Core Max")
-			?? FindTemperature(cpu, "CPU Package")
-			?? FindTemperature(cpu, "Core")
-			?? double.NaN;
+		       ?? FindTemperature(cpu, "Core Max")
+		       ?? FindTemperature(cpu, "CPU Package")
+		       ?? FindTemperature(cpu, "Core")
+		       ?? double.NaN;
 	}
 
 	private static double? FindValue(IHardware hardware, SensorType type, string namePrefix)

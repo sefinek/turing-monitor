@@ -69,7 +69,7 @@ public sealed class ThemePainter : IDisposable
 		}
 
 		var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-		var surface = (bitmap, Graphics.FromImage(bitmap));
+		(Bitmap bitmap, Graphics) surface = (bitmap, Graphics.FromImage(bitmap));
 		surfaces[key] = surface;
 		return surface;
 	}
@@ -157,7 +157,9 @@ public sealed class ThemePainter : IDisposable
 		}
 
 		using (var brush = new SolidBrush(fontColor))
+		{
 			g.FillPath(brush, path);
+		}
 
 		Blit(bitmap, originX, originY);
 	}

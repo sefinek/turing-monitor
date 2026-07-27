@@ -40,7 +40,7 @@ public static class UpdateChecker
 			return null;
 
 		await using Stream stream = await response.Content.ReadAsStreamAsync();
-		GitHubRelease? release = await JsonSerializer.DeserializeAsync<GitHubRelease>(stream);
+		var release = await JsonSerializer.DeserializeAsync<GitHubRelease>(stream);
 		if (string.IsNullOrWhiteSpace(release?.TagName))
 			return null;
 
@@ -90,10 +90,8 @@ public static class UpdateChecker
 
 	private sealed class GitHubRelease
 	{
-		[JsonPropertyName("tag_name")]
-		public string? TagName { get; set; }
+		[JsonPropertyName("tag_name")] public string? TagName { get; set; }
 
-		[JsonPropertyName("html_url")]
-		public string? HtmlUrl { get; set; }
+		[JsonPropertyName("html_url")] public string? HtmlUrl { get; set; }
 	}
 }
