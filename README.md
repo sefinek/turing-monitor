@@ -3,8 +3,8 @@
 Windows (WPF) application for hardware monitoring on small USB screens of the **Turing Smart Screen** type. Displays CPU/GPU load, RAM, disk, network and clock - either in the built-in dashboard or in one of the themes compatible with the [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) project.
 
 <p align="center">
-  <img src=".github/app-window.png" alt="Turing Monitor application window" height="300">
-  <img src=".github/dashboard.png" alt="Turing Monitor running the built-in dashboard on a 3.5&quot; screen" height="300">
+  <img src=".github/app-window.png" alt="Turing Monitor application window" height="220">
+  <img src=".github/dashboard.png" alt="Turing Monitor running the built-in dashboard on a 3.5&quot; screen" height="220">
 </p>
 
 > [!WARNING]
