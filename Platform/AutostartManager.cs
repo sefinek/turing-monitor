@@ -78,7 +78,7 @@ public static class AutostartManager
 	private static void SetRegistryEntry()
 	{
 		using RegistryKey key = Registry.CurrentUser.OpenSubKey(RunKey, true)
-								?? Registry.CurrentUser.CreateSubKey(RunKey);
+		                        ?? Registry.CurrentUser.CreateSubKey(RunKey);
 
 		var exePath = Environment.ProcessPath;
 		if (!string.IsNullOrEmpty(exePath))
@@ -123,7 +123,7 @@ public static class AutostartManager
 			throw new InvalidOperationException($"Missing autostart script: {RegisterScriptPath}");
 
 		var args = "-NoProfile -ExecutionPolicy Bypass -File "
-				   + $"\"{RegisterScriptPath}\" -TaskName \"{TaskName}\" -ExePath \"{exePath}\" -Description \"{TaskDescription}\"";
+		           + $"\"{RegisterScriptPath}\" -TaskName \"{TaskName}\" -ExePath \"{exePath}\" -Description \"{TaskDescription}\"";
 		RunElevated("powershell.exe", args, "register the elevated autostart task");
 	}
 

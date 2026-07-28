@@ -42,6 +42,12 @@ public sealed class HardwareMonitor : IDisposable
 	public bool GpuAvailable => _gpu is not null;
 	public string GpuName => _gpu?.Name ?? "GPU";
 
+	public void Dispose()
+	{
+		_cpuPerfCounter?.Dispose();
+		_computer.Close();
+	}
+
 	public IEnumerable<string> DescribeCpuSensors()
 	{
 		if (_cpu is null)
@@ -49,12 +55,6 @@ public sealed class HardwareMonitor : IDisposable
 
 		foreach (ISensor sensor in _cpu.Sensors)
 			yield return $"{sensor.SensorType} '{sensor.Name}' = {sensor.Value?.ToString() ?? "null"}";
-	}
-
-	public void Dispose()
-	{
-		_cpuPerfCounter?.Dispose();
-		_computer.Close();
 	}
 
 	public void Read(SystemStats stats)

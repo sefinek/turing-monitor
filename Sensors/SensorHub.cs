@@ -32,8 +32,8 @@ public sealed class SensorHub : IDisposable
 	private DateTime _prevNetTime;
 
 	private ManagementObjectSearcher? _thermalSearcher;
-	private double _wmiTempC;
 	private bool _wmiTempAvailable;
+	private double _wmiTempC;
 
 	public SensorHub(bool log = true)
 	{
