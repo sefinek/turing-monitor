@@ -10,6 +10,10 @@ Windows (WPF) application for hardware monitoring on small USB screens of the **
 > [!WARNING]
 > **Tested exclusively on a 3.5" IPS "V2" screen** (CH340 chip, `VID_1A86&PID_5722`, identifier `USB35INCHIPSV2`, native resolution 320×480). The application implements only the **Rev A** communication protocol - other hardware variants (Rev B/C/D, WeAct A/B and other screen sizes) **are not supported**, even though `data/themes` contains ready-made themes for larger screens too (5", 8", 8.8", etc.) - those will only display correctly on a screen of the matching physical size.
 
+## Download
+Check GitHub Releases: https://github.com/sefinek/turing-monitor/releases
+Choose the `standalone` version if you do not have .NET 10 installed, as it offers broader compatibility. In most cases, the standard version is recommended.
+
 ## Features
 
 - **Dashboard** - built-in, ready-to-use layout with CPU, RAM, GPU, disk and network, no theme selection required.
