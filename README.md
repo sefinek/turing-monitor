@@ -26,9 +26,9 @@ Choose the `standalone` version if you do not have .NET 10 installed (it offers 
 
 ## Requirements
 - Windows 10 1903+ / Windows 11 (x64)
-- .NET 10 Desktop Runtime
+- .NET 10 Desktop Runtime (not needed with the `standalone` release, which bundles it)
 - A **Turing Smart Screen 3.5" (Rev A)** connected via USB
-- Running as **administrator** is required for CPU temperature readings to work (a limitation of the LibreHardwareMonitor driver) - without elevated rights the application works normally, but this one value stays unavailable
+- Running as **administrator** is required for CPU temperature readings to work (a limitation of the LibreHardwareMonitor driver) - without elevated rights the application works normally, but this one value stays unavailable. Settings has a "Run as administrator" autostart option that registers a scheduled task to launch the app elevated at logon, so you don't need to click through a UAC prompt every time.
 
 ## Themes
 The `data/themes` directory contains themes in the format used by the turing-smart-screen-python project. The selection list marks themes with a size other than 320×480 with a ⚠️ icon - those will render incorrectly on a `3.5"` screen.
