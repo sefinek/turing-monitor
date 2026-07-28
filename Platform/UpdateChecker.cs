@@ -10,7 +10,7 @@ public sealed record UpdateInfo(string CurrentVersion, string LatestVersion, str
 
 public static class UpdateChecker
 {
-	private const string LatestReleaseApiUrl = "https://api.github.com/repos/sefinek/TuringMonitor/releases/latest";
+	private const string LatestReleaseApiUrl = "https://api.github.com/repos/sefinek/turing-monitor/releases/latest";
 
 	private static readonly HttpClient Http = CreateClient();
 
@@ -51,7 +51,7 @@ public static class UpdateChecker
 			return null;
 
 		var url = string.IsNullOrWhiteSpace(release.HtmlUrl)
-			? "https://github.com/sefinek/TuringMonitor/releases/latest"
+			? "https://github.com/sefinek/turing-monitor/releases/latest"
 			: release.HtmlUrl;
 
 		return new UpdateInfo(current, latest, url);

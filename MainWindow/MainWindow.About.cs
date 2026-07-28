@@ -10,7 +10,7 @@ namespace TuringMonitor;
 
 public partial class MainWindow
 {
-	private const string RepoUrl = "https://github.com/sefinek/TuringMonitor";
+	private const string RepoUrl = "https://github.com/sefinek/turing-monitor";
 
 	private UpdateInfo? _updateInfo;
 	private static string AppVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0";

@@ -24,8 +24,8 @@
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<FileVersion>$(Version)</FileVersion>
 
-		<PackageProjectUrl>https://github.com/sefinek/TuringMonitor</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/sefinek/TuringMonitor</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/sefinek/turing-monitor</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/sefinek/turing-monitor</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>Turing;SmartScreen;Monitor;Hardware;Dashboard</PackageTags>
 
