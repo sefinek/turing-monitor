@@ -45,10 +45,10 @@
 					        ToolTip="Settings">
 						<TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
 					</Button>
-					<Button x:Name="btnMin" Style="{StaticResource CaptionButton}" Click="btnMin_Click">
+					<Button x:Name="btnMin" Style="{StaticResource CaptionButton}" Click="btnMin_Click" ToolTip="Minimize">
 						<TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10" />
 					</Button>
-					<Button x:Name="btnClose" Style="{StaticResource CloseButton}" Click="btnClose_Click">
+					<Button x:Name="btnClose" Style="{StaticResource CloseButton}" Click="btnClose_Click" ToolTip="Close">
 						<TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" />
 					</Button>
 				</StackPanel>
@@ -170,7 +170,7 @@
 						<Grid Margin="0,0,0,22">
 							<TextBlock Text="Settings" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
 							<Button x:Name="btnSettingsClose" Style="{StaticResource CaptionButton}" Width="34" Height="30"
-							        HorizontalAlignment="Right" Click="btnSettingsClose_Click">
+							        HorizontalAlignment="Right" Click="btnSettingsClose_Click" ToolTip="Close">
 								<TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" />
 							</Button>
 						</Grid>
@@ -282,13 +282,13 @@
 						<Grid Margin="0,0,0,18">
 							<TextBlock Text="Live readings" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
 							<Button x:Name="btnReadingsClose" Style="{StaticResource CaptionButton}" Width="34" Height="30"
-							        HorizontalAlignment="Right" Click="btnReadingsClose_Click">
+							        HorizontalAlignment="Right" Click="btnReadingsClose_Click" ToolTip="Close">
 								<TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" />
 							</Button>
 						</Grid>
 
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,9">
-							<Border Width="4" Height="18" CornerRadius="2" Background="#50AAFF" VerticalAlignment="Center" />
+							<Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource CpuAccentBrush}" VerticalAlignment="Center" />
 							<TextBlock Text="CPU" FontSize="14.5" FontWeight="Bold" Foreground="{StaticResource TextBrush}"
 							           Margin="10,0,0,0" VerticalAlignment="Center" />
 							<TextBlock x:Name="rdCpuName" Text="—" FontSize="11" Foreground="{StaticResource MutedBrush}"
@@ -308,7 +308,7 @@
 						</Grid>
 
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,9">
-							<Border Width="4" Height="18" CornerRadius="2" Background="#6EDC8C" VerticalAlignment="Center" />
+							<Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource GpuAccentBrush}" VerticalAlignment="Center" />
 							<TextBlock Text="GPU" FontSize="14.5" FontWeight="Bold" Foreground="{StaticResource TextBrush}"
 							           Margin="10,0,0,0" VerticalAlignment="Center" />
 							<TextBlock x:Name="rdGpuName" Text="—" FontSize="11" Foreground="{StaticResource MutedBrush}"
@@ -328,7 +328,7 @@
 						</Grid>
 
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,9">
-							<Border Width="4" Height="18" CornerRadius="2" Background="#8C78FF" VerticalAlignment="Center" />
+							<Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource RamAccentBrush}" VerticalAlignment="Center" />
 							<TextBlock Text="MEMORY" FontSize="14.5" FontWeight="Bold" Foreground="{StaticResource TextBrush}"
 							           Margin="10,0,0,0" VerticalAlignment="Center" />
 						</StackPanel>
@@ -346,7 +346,7 @@
 						</Grid>
 
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,9">
-							<Border Width="4" Height="18" CornerRadius="2" Background="#FFB450" VerticalAlignment="Center" />
+							<Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource DiskAccentBrush}" VerticalAlignment="Center" />
 							<TextBlock Text="STORAGE" FontSize="14.5" FontWeight="Bold" Foreground="{StaticResource TextBrush}"
 							           Margin="10,0,0,0" VerticalAlignment="Center" />
 						</StackPanel>
@@ -364,7 +364,7 @@
 						</Grid>
 
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,9">
-							<Border Width="4" Height="18" CornerRadius="2" Background="#FF6E96" VerticalAlignment="Center" />
+							<Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource NetAccentBrush}" VerticalAlignment="Center" />
 							<TextBlock Text="NETWORK" FontSize="14.5" FontWeight="Bold" Foreground="{StaticResource TextBrush}"
 							           Margin="10,0,0,0" VerticalAlignment="Center" />
 						</StackPanel>

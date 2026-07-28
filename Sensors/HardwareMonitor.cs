@@ -38,8 +38,18 @@ public sealed class HardwareMonitor : IDisposable
 	}
 
 	public bool CpuTemperatureAvailable { get; private set; }
+	public bool CpuTemperatureSensorBlocked { get; private set; }
 	public bool GpuAvailable => _gpu is not null;
 	public string GpuName => _gpu?.Name ?? "GPU";
+
+	public IEnumerable<string> DescribeCpuSensors()
+	{
+		if (_cpu is null)
+			yield break;
+
+		foreach (ISensor sensor in _cpu.Sensors)
+			yield return $"{sensor.SensorType} '{sensor.Name}' = {sensor.Value?.ToString() ?? "null"}";
+	}
 
 	public void Dispose()
 	{
@@ -60,6 +70,8 @@ public sealed class HardwareMonitor : IDisposable
 			stats.CpuTempAvailable = CpuTemperatureAvailable;
 			if (CpuTemperatureAvailable)
 				stats.CpuTempC = temp;
+			else
+				CpuTemperatureSensorBlocked = _cpu.Sensors.Any(s => s.SensorType == SensorType.Temperature && s.Value is not null);
 		}
 
 		if (_gpu is null)

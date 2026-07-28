@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.IO;
+using System.Management;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -29,6 +31,10 @@ public sealed class SensorHub : IDisposable
 	private ulong _prevIdle, _prevKernel, _prevUser;
 	private DateTime _prevNetTime;
 
+	private ManagementObjectSearcher? _thermalSearcher;
+	private double _wmiTempC;
+	private bool _wmiTempAvailable;
+
 	public SensorHub(bool log = true)
 	{
 		_cpuName = ReadRegistryString(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0", "ProcessorNameString", "CPU");
@@ -43,11 +49,30 @@ public sealed class SensorHub : IDisposable
 
 		_hardware.Read(new SystemStats());
 		if (_hardware.CpuTemperatureAvailable)
+		{
 			Logger.Info("CPU temperature: available");
-		else if (!IsElevated())
-			Logger.Info("CPU temperature: unavailable - run the app as administrator to enable it");
+		}
 		else
-			Logger.Info("CPU temperature: unavailable on this hardware");
+		{
+			InitThermalZoneFallback();
+			if (_wmiTempAvailable)
+			{
+				Logger.Info($"CPU temperature: available via WMI thermal zone fallback ({_wmiTempC:0}°C)");
+			}
+			else if (!IsElevated())
+			{
+				Logger.Info("CPU temperature: unavailable - run the app as administrator to enable it");
+			}
+			else
+			{
+				Logger.Info("CPU temperature: unavailable on this hardware");
+				if (_hardware.CpuTemperatureSensorBlocked)
+					Logger.Info("A temperature sensor was found but reads 0 - likely blocked by Windows Memory Integrity "
+					            + "(Core Isolation) or another tool holding exclusive access (Ryzen Master, HWiNFO, Armoury Crate, MSI Center, etc.)");
+				var sensors = string.Join(" | ", _hardware.DescribeCpuSensors());
+				Logger.Debug($"CPU sensors reported by LibreHardwareMonitor: {(sensors.Length == 0 ? "(none)" : sensors)}");
+			}
+		}
 
 		Logger.Info(_hardware.GpuAvailable ? $"GPU: {_hardware.GpuName}" : "GPU: none detected");
 	}
@@ -60,6 +85,7 @@ public sealed class SensorHub : IDisposable
 	public void Dispose()
 	{
 		_hardware.Dispose();
+		_thermalSearcher?.Dispose();
 	}
 
 	[DllImport("kernel32.dll", SetLastError = true)]
@@ -80,11 +106,74 @@ public sealed class SensorHub : IDisposable
 
 		_hardware.Read(stats);
 
+		if (!stats.CpuTempAvailable && _thermalSearcher is not null)
+		{
+			ReadThermalZone();
+			if (_wmiTempAvailable)
+			{
+				stats.CpuTempAvailable = true;
+				stats.CpuTempC = _wmiTempC;
+			}
+		}
+
 		ReadMemory(stats);
 		ReadDisk(stats);
 		ReadNetwork(stats);
 
 		return stats;
+	}
+
+	private void InitThermalZoneFallback()
+	{
+		try
+		{
+			var scope = new ManagementScope(@"\\.\root\WMI");
+			var query = new ObjectQuery("SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
+			_thermalSearcher = new ManagementObjectSearcher(scope, query);
+			ReadThermalZone();
+		}
+		catch
+		{
+			_thermalSearcher = null;
+		}
+
+		if (!_wmiTempAvailable)
+		{
+			_thermalSearcher?.Dispose();
+			_thermalSearcher = null;
+		}
+	}
+
+	private void ReadThermalZone()
+	{
+		if (_thermalSearcher is null)
+			return;
+
+		try
+		{
+			var best = double.NaN;
+			foreach (ManagementBaseObject obj in _thermalSearcher.Get())
+			{
+				var raw = obj["CurrentTemperature"];
+				if (raw is null)
+					continue;
+
+				var celsius = Convert.ToDouble(raw, CultureInfo.InvariantCulture) / 10.0 - 273.15;
+				if (celsius > 0 && celsius < 150 && (double.IsNaN(best) || celsius > best))
+					best = celsius;
+			}
+
+			if (!double.IsNaN(best))
+			{
+				_wmiTempC = best;
+				_wmiTempAvailable = true;
+			}
+		}
+		catch
+		{
+			_thermalSearcher?.Dispose();
+			_thermalSearcher = null;
+		}
 	}
 
 	private double ReadCpuLoad()

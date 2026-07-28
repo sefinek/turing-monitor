@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Globalization;
 using TuringMonitor.Sensors;
+using TuringMonitor.Theme;
 
 namespace TuringMonitor.Rendering;
 
@@ -17,11 +18,11 @@ public sealed class DashboardRenderer : IDisposable
 	private static readonly Color TextColor = Color.FromArgb(235, 238, 245);
 	private static readonly Color MutedColor = Color.FromArgb(150, 158, 175);
 
-	private static readonly Color CpuColor = Color.FromArgb(80, 170, 255);
-	private static readonly Color RamColor = Color.FromArgb(140, 120, 255);
-	private static readonly Color GpuColor = Color.FromArgb(110, 220, 140);
-	private static readonly Color DiskColor = Color.FromArgb(255, 180, 80);
-	private static readonly Color NetColor = Color.FromArgb(255, 110, 150);
+	private static readonly Color CpuColor = ColorTranslator.FromHtml(AccentPalette.Cpu);
+	private static readonly Color RamColor = ColorTranslator.FromHtml(AccentPalette.Ram);
+	private static readonly Color GpuColor = ColorTranslator.FromHtml(AccentPalette.Gpu);
+	private static readonly Color DiskColor = ColorTranslator.FromHtml(AccentPalette.Disk);
+	private static readonly Color NetColor = ColorTranslator.FromHtml(AccentPalette.Net);
 
 	private static readonly (double Pos, Color Color)[] GradientStops =
 	{
@@ -253,7 +254,7 @@ public sealed class DashboardRenderer : IDisposable
 
 	private static Color TempColor(double celsius)
 	{
-		return Gradient((celsius - 35.0) / 55.0);
+		return Gradient((celsius - 35.0) / 65.0);
 	}
 
 	private static Color RateColor(double kbps, double linkKBps)
