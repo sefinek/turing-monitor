@@ -18,6 +18,7 @@ public sealed class TuringScreenRevA : IDisposable
 	public string ComPort { get; private set; }
 	public int DisplayWidth { get; private set; }
 	public int DisplayHeight { get; private set; }
+	public string Model { get; private set; } = "unknown";
 	public Orientation Orientation { get; private set; } = Orientation.Portrait;
 
 	public int Width => Orientation is Orientation.Portrait or Orientation.ReversePortrait ? DisplayWidth : DisplayHeight;
@@ -114,16 +115,27 @@ public sealed class TuringScreenRevA : IDisposable
 		{
 			DisplayWidth = 320;
 			DisplayHeight = 480;
+			Model = "3.5\" (native panel 320x480)";
 		}
 		else if (IsAll(response, 0x02))
 		{
 			DisplayWidth = 480;
 			DisplayHeight = 800;
+			Model = "5\" (native panel 480x800)";
 		}
 		else if (IsAll(response, 0x03))
 		{
 			DisplayWidth = 600;
 			DisplayHeight = 1024;
+			Model = "8.8\" (native panel 600x1024)";
+		}
+		else if (response.Length == 0)
+		{
+			Model = $"no reply to identification handshake, using configured native panel {DisplayWidth}x{DisplayHeight}";
+		}
+		else
+		{
+			Model = $"unrecognized handshake response 0x{Convert.ToHexString(response)}, using configured native panel {DisplayWidth}x{DisplayHeight}";
 		}
 	}
 

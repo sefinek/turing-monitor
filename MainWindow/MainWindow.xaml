@@ -31,6 +31,13 @@
 					           Foreground="{StaticResource MutedBrush}" Cursor="Hand"
 					           WindowChrome.IsHitTestVisibleInChrome="True"
 					           MouseLeftButtonUp="lblVersion_Click" ToolTip="About" />
+					<TextBlock x:Name="lblGitHub" Margin="12,0,0,0" FontSize="12" VerticalAlignment="Center"
+					           Foreground="{StaticResource MutedBrush}" Cursor="Hand"
+					           WindowChrome.IsHitTestVisibleInChrome="True"
+					           MouseLeftButtonUp="lblGitHub_Click" ToolTip="Open the GitHub repository">
+						<Run Text="&#xE71B;" FontFamily="Segoe MDL2 Assets" FontSize="11" />
+						<Run Text=" GitHub" />
+					</TextBlock>
 				</StackPanel>
 				<StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
 					<Button x:Name="btnReadings" Style="{StaticResource CaptionButton}" Click="btnReadings_Click"
@@ -75,14 +82,14 @@
 							        Width="80" Height="34" Margin="8,0,0,0" Content="Refresh" Click="btnRefresh_Click" />
 						</Grid>
 
-						<Grid Margin="0,0,0,24">
+						<Grid>
 							<TextBlock Text="BRIGHTNESS" Style="{StaticResource SectionLabel}" FontSize="13" HorizontalAlignment="Left" />
 							<TextBlock x:Name="lblBrightness" Text="50%" Foreground="{StaticResource TextBrush}"
 							           FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Right" />
 						</Grid>
 						<Slider x:Name="sldBrightness" Style="{StaticResource ModernSlider}" Minimum="0" Maximum="100"
 						        Value="50" TickFrequency="5" IsSnapToTickEnabled="True"
-						        ValueChanged="sldBrightness_ValueChanged" Margin="0,-6,0,4" />
+						        ValueChanged="sldBrightness_ValueChanged" Margin="0,0,0,4" />
 					</StackPanel>
 
 					<Grid DockPanel.Dock="Bottom" Margin="0,14,0,0">
@@ -189,7 +196,11 @@
 								<CheckBox x:Name="chkStartMinimized" Style="{StaticResource ToggleSwitch}"
 								          Content="Start minimized" Margin="0,0,0,14" />
 								<CheckBox x:Name="chkAutostart" Style="{StaticResource ToggleSwitch}"
-								          Content="Run at Windows startup" Margin="0,0,0,14" />
+								          Content="Run at Windows startup" Margin="0,0,0,14"
+								          Checked="chkAutostart_CheckedChanged" Unchecked="chkAutostart_CheckedChanged" />
+								<CheckBox x:Name="chkAutostartAdmin" Style="{StaticResource ToggleSwitch}"
+								          Content="Run as administrator" Margin="24,0,0,14"
+								          ToolTip="Registers a scheduled task instead of the normal startup entry, so the app launches elevated at logon (needed for sensors like CPU temperature). Windows will ask you to confirm with UAC once, right now, when you save." />
 								<CheckBox x:Name="chkAutoStartMonitor" Style="{StaticResource ToggleSwitch}"
 								          Content="Start monitoring on launch" Margin="0,0,0,14" />
 								<CheckBox x:Name="chkAutoReconnect" Style="{StaticResource ToggleSwitch}"
@@ -228,17 +239,13 @@
 									</Grid.ColumnDefinitions>
 									<StackPanel Grid.Column="0">
 										<TextBlock Text="TIME FORMAT" Style="{StaticResource SectionLabel}" />
-										<TextBox x:Name="txtTimeFormat" Height="34" Padding="10,0" VerticalContentAlignment="Center"
-										         Background="{StaticResource SurfaceAltBrush}" Foreground="{StaticResource TextBrush}"
-										         CaretBrush="{StaticResource TextBrush}" BorderBrush="{StaticResource BorderBrush}"
-										         BorderThickness="1" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" />
+										<TextBox x:Name="txtTimeFormat" Style="{StaticResource ModernTextBox}"
+										         FontFamily="Cascadia Mono, Consolas" FontSize="12.5" />
 									</StackPanel>
 									<StackPanel Grid.Column="2">
 										<TextBlock Text="DATE FORMAT" Style="{StaticResource SectionLabel}" />
-										<TextBox x:Name="txtDateFormat" Height="34" Padding="10,0" VerticalContentAlignment="Center"
-										         Background="{StaticResource SurfaceAltBrush}" Foreground="{StaticResource TextBrush}"
-										         CaretBrush="{StaticResource TextBrush}" BorderBrush="{StaticResource BorderBrush}"
-										         BorderThickness="1" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" />
+										<TextBox x:Name="txtDateFormat" Style="{StaticResource ModernTextBox}"
+										         FontFamily="Cascadia Mono, Consolas" FontSize="12.5" />
 									</StackPanel>
 								</Grid>
 
@@ -268,7 +275,7 @@
 							</StackPanel>
 						</Grid>
 
-						<Button Content="Save" Style="{StaticResource AccentButton}" Height="44" Margin="0,26,0,0"
+						<Button Content="Save" Style="{StaticResource AccentButton}" Height="38" Margin="0,26,0,0"
 						        Click="btnSaveSettings_Click" />
 					</StackPanel>
 				</Border>

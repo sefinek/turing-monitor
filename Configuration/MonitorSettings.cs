@@ -11,6 +11,7 @@ public sealed class MonitorSettings
 	public bool ResetOnStartup { get; set; }
 	public bool StartMinimized { get; set; }
 	public bool Autostart { get; set; }
+	public bool AutostartAsAdmin { get; set; }
 	public bool StartMonitoringOnLaunch { get; set; }
 	public string ThemeName { get; set; } = "";
 	public string TimeFormat { get; set; } = "HH:mm:ss";

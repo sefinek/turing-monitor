@@ -8,7 +8,7 @@ Windows (WPF) application for hardware monitoring on small USB screens of the **
 </p>
 
 > [!WARNING]
-> **Tested exclusively on a 3.5" IPS "V2" screen** (CH340 chip, `VID_1A86&PID_5722`, identifier `USB35INCHIPSV2`, native resolution 320×480). The application implements only the **Rev A** communication protocol - other hardware variants (Rev B/C/D, WeAct A/B and other screen sizes) **are not supported**, even though `res/themes` contains ready-made themes for larger screens too (5", 8", 8.8", etc.) - those will only display correctly on a screen of the matching physical size.
+> **Tested exclusively on a 3.5" IPS "V2" screen** (CH340 chip, `VID_1A86&PID_5722`, identifier `USB35INCHIPSV2`, native resolution 320×480). The application implements only the **Rev A** communication protocol - other hardware variants (Rev B/C/D, WeAct A/B and other screen sizes) **are not supported**, even though `data/themes` contains ready-made themes for larger screens too (5", 8", 8.8", etc.) - those will only display correctly on a screen of the matching physical size.
 
 ## Features
 
@@ -29,7 +29,7 @@ Windows (WPF) application for hardware monitoring on small USB screens of the **
 
 ## Themes
 
-The `res/themes` directory contains themes in the format used by the turing-smart-screen-python project. The selection list marks themes with a size other than 320×480 with a ⚠️ icon - those will render incorrectly on a `3.5"` screen.
+The `data/themes` directory contains themes in the format used by the turing-smart-screen-python project. The selection list marks themes with a size other than 320×480 with a ⚠️ icon - those will render incorrectly on a `3.5"` screen.
 Some themes also use stat categories (e.g. `UPTIME`, `CUSTOM`, `WEATHER`, `PING`) that the current version of `ThemeEngine` doesn't support yet - the corresponding widgets will stay empty in that case.
 
 ## MIT License

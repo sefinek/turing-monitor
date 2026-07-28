@@ -4,11 +4,11 @@ namespace TuringMonitor.Theme;
 
 public static class ResourceLocator
 {
-	private static string? _resRoot;
+	private static string? _dataRoot;
 
-	public static string ResRoot => _resRoot ??= FindResRoot();
-	public static string ThemesDir => Path.Combine(ResRoot, "themes");
-	public static string FontsDir => Path.Combine(ResRoot, "fonts");
+	public static string DataRoot => _dataRoot ??= FindDataRoot();
+	public static string ThemesDir => Path.Combine(DataRoot, "themes");
+	public static string FontsDir => Path.Combine(DataRoot, "fonts");
 
 	public static IEnumerable<string> ListThemes()
 	{
@@ -31,17 +31,17 @@ public static class ResourceLocator
 		return File.Exists(path) ? path : null;
 	}
 
-	private static string FindResRoot()
+	private static string FindDataRoot()
 	{
 		var dir = new DirectoryInfo(AppContext.BaseDirectory);
 		while (dir is not null)
 		{
-			var candidate = Path.Combine(dir.FullName, "res");
+			var candidate = Path.Combine(dir.FullName, "data");
 			if (Directory.Exists(Path.Combine(candidate, "themes")))
 				return candidate;
 			dir = dir.Parent;
 		}
 
-		return Path.Combine(AppContext.BaseDirectory, "res");
+		return Path.Combine(AppContext.BaseDirectory, "data");
 	}
 }

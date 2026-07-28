@@ -135,6 +135,7 @@ public partial class MainWindow
 		_settings.StartMonitoringOnLaunch = chkAutoStartMonitor.IsChecked == true;
 		_settings.IntervalMs = (cmbInterval.SelectedItem as IntervalOption)?.Ms ?? 1000;
 		_settings.Autostart = chkAutostart.IsChecked == true;
+		_settings.AutostartAsAdmin = _settings.Autostart && chkAutostartAdmin.IsChecked == true;
 		_settings.ThemeName = SelectedThemeName();
 		_settings.TimeFormat = txtTimeFormat.Text;
 		_settings.DateFormat = txtDateFormat.Text;
@@ -148,19 +149,62 @@ public partial class MainWindow
 		_settings.AutoReconnect = chkAutoReconnect.IsChecked == true;
 		_settings.CheckForUpdates = chkCheckForUpdates.IsChecked == true;
 
-		try
-		{
-			AutostartManager.SetEnabled(_settings.Autostart);
-		}
-		catch (Exception ex)
-		{
-			AppLog.Error(ex, "Failed to update autostart");
-		}
-
 		SettingsStore.Save(_settings);
 		AppLog.Info("Settings saved");
 		settingsOverlay.Visibility = Visibility.Collapsed;
 		MarkPending();
+
+		ApplyAutostart(_settings.Autostart, _settings.AutostartAsAdmin);
+	}
+
+	private void ApplyAutostart(bool enabled, bool asAdmin)
+	{
+		chkAutostart.IsEnabled = false;
+		chkAutostartAdmin.IsEnabled = false;
+
+		Task.Run(() =>
+		{
+			try
+			{
+				AutostartManager.SetEnabled(enabled, asAdmin);
+				AppLog.Info(enabled
+					? $"Autostart: enabled ({(asAdmin ? "as administrator" : "normal")})"
+					: "Autostart: disabled");
+			}
+			catch (Exception ex)
+			{
+				AppLog.Error(ex, "Failed to update autostart");
+			}
+			finally
+			{
+				Dispatcher.BeginInvoke(RefreshAutostartUi);
+			}
+		});
+	}
+
+	private void RefreshAutostartUi()
+	{
+		var asAdmin = AutostartManager.IsAdminEnabled();
+		var enabled = asAdmin || AutostartManager.IsEnabled();
+
+		if (_settings.Autostart != enabled || _settings.AutostartAsAdmin != asAdmin)
+		{
+			_settings.Autostart = enabled;
+			_settings.AutostartAsAdmin = asAdmin;
+			SettingsStore.Save(_settings);
+		}
+
+		chkAutostart.IsChecked = enabled;
+		chkAutostart.IsEnabled = true;
+		chkAutostartAdmin.IsChecked = asAdmin;
+		chkAutostartAdmin.IsEnabled = enabled;
+	}
+
+	private void chkAutostart_CheckedChanged(object sender, RoutedEventArgs e)
+	{
+		chkAutostartAdmin.IsEnabled = chkAutostart.IsChecked == true;
+		if (chkAutostart.IsChecked != true)
+			chkAutostartAdmin.IsChecked = false;
 	}
 
 	private void ApplySettingsToUi()
@@ -176,7 +220,7 @@ public partial class MainWindow
 
 		chkResetOnStartup.IsChecked = _settings.ResetOnStartup;
 		chkStartMinimized.IsChecked = _settings.StartMinimized;
-		chkAutostart.IsChecked = AutostartManager.IsEnabled();
+		RefreshAutostartUi();
 		chkAutoStartMonitor.IsChecked = _settings.StartMonitoringOnLaunch;
 		chkExitWhenNoEthernet.IsChecked = _settings.ExitWhenNoEthernet;
 		chkExitWhenAway.IsChecked = _settings.ExitWhenAway;

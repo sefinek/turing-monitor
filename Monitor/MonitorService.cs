@@ -140,6 +140,7 @@ public sealed class MonitorService : IDisposable
 
 			AppLog.Info("Initializing communication...");
 			screen.InitializeComm();
+			AppLog.Info($"Display: {screen.Model}");
 			AppLog.Info($"Setting brightness to {settings.Brightness}%");
 			screen.SetBrightness(settings.Brightness);
 			screen.ScreenOn();
@@ -204,7 +205,7 @@ public sealed class MonitorService : IDisposable
 
 		var w = screen.Width;
 		var h = screen.Height;
-		AppLog.Info($"Working resolution: {w}x{h}");
+		AppLog.Info($"Working resolution: {w}x{h} ({settings.Orientation}, native panel is {screen.DisplayWidth}x{screen.DisplayHeight})");
 		var linkLabel = settings.NetLinkMbps > 0 ? $"{settings.NetLinkMbps} Mb/s (manual)" : "auto-detect";
 		AppLog.Info($"Dashboard mode | orientation={settings.Orientation} | interval={settings.IntervalMs} ms | net units={settings.NetUnits} | link={linkLabel}");
 

@@ -58,8 +58,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="res\**" />
-		<Content Include="res\**" Exclude="res\fonts\**\*_preview.png;res\**\*.xcf;res\**\*.svg;res\**\*.gs2;res\**\*.py">
+		<None Remove="data\**" />
+		<Content Include="data\**" Exclude="data\fonts\**\*_preview.png;data\**\*.xcf;data\**\*.svg;data\**\*.gs2;data\**\*.py">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

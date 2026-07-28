@@ -10,6 +10,8 @@ namespace TuringMonitor;
 
 public partial class MainWindow
 {
+	private const string RepoUrl = "https://github.com/sefinek/TuringMonitor";
+
 	private UpdateInfo? _updateInfo;
 	private static string AppVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0";
 
@@ -53,5 +55,17 @@ public partial class MainWindow
 		MessageBox.Show(this,
 			$"Turing Monitor\nVersion {AppVersion}\n\n© 2026 Sefinek",
 			"About", MessageBoxButton.OK, MessageBoxImage.Information);
+	}
+
+	private void lblGitHub_Click(object sender, MouseButtonEventArgs e)
+	{
+		try
+		{
+			Process.Start(new ProcessStartInfo { FileName = RepoUrl, UseShellExecute = true });
+		}
+		catch (Exception ex)
+		{
+			AppLog.Error(ex, "Failed to open the GitHub repository");
+		}
 	}
 }
