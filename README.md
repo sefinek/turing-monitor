@@ -1,5 +1,4 @@
 # 🖥️ Turing Monitor
-
 Windows (WPF) application for hardware monitoring on small USB screens of the **Turing Smart Screen** type. Displays CPU/GPU load, RAM, disk, network and clock - either in the built-in dashboard or in one of the themes compatible with the [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) project.
 
 <p align="center">
@@ -12,10 +11,9 @@ Windows (WPF) application for hardware monitoring on small USB screens of the **
 
 ## Download
 Check GitHub Releases: https://github.com/sefinek/turing-monitor/releases  
-Choose the `standalone` version if you do not have .NET 10 installed, as it offers broader compatibility. In most cases, the standard version is recommended.
+Choose the `standalone` version if you do not have .NET 10 installed (it offers broader compatibility). In most cases, the standard version is recommended.
 
 ## Features
-
 - **Dashboard** - built-in, ready-to-use layout with CPU, RAM, GPU, disk and network, no theme selection required.
 - **Themes** - support for `theme.yaml` files compatible with turing-smart-screen-python (static images/text, progress bars, radial indicators, dynamic text).
 - **Hardware sensors** - CPU (load, clock, temperature), GPU (NVIDIA / AMD / Intel via [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)), RAM, disk, network.
@@ -25,17 +23,14 @@ Choose the `standalone` version if you do not have .NET 10 installed, as it offe
 - **Update checking** - optional, queries this repository's GitHub Releases on startup.
 
 ## Requirements
-
 - Windows 10 1903+ / Windows 11 (x64)
 - .NET 10 Desktop Runtime
 - A **Turing Smart Screen 3.5" (Rev A)** connected via USB
 - Running as **administrator** is required for CPU temperature readings to work (a limitation of the LibreHardwareMonitor driver) - without elevated rights the application works normally, but this one value stays unavailable
 
 ## Themes
-
 The `data/themes` directory contains themes in the format used by the turing-smart-screen-python project. The selection list marks themes with a size other than 320×480 with a ⚠️ icon - those will render incorrectly on a `3.5"` screen.
 Some themes also use stat categories (e.g. `UPTIME`, `CUSTOM`, `WEATHER`, `PING`) that the current version of `ThemeEngine` doesn't support yet - the corresponding widgets will stay empty in that case.
 
 ## MIT License
-
 Copyright © 2026 [Sefinek](https://sefinek.net)
