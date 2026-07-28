@@ -1,5 +1,6 @@
 # 🖥️ Turing Monitor
-Windows (WPF) application for hardware monitoring on small USB screens of the **Turing Smart Screen** type. Displays CPU/GPU load, RAM, disk, network and clock - either in the built-in dashboard or in one of the themes compatible with the [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) project.
+Windows (WPF) application for hardware monitoring on small USB screens of the **Turing Smart Screen** type.
+Displays CPU/GPU load, RAM, disk, network and clock - either in the built-in dashboard or in one of the themes compatible with the [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) project.
 
 <p align="center">
   <img src=".github/app-window.png" alt="Turing Monitor application window" height="260">
@@ -7,7 +8,8 @@ Windows (WPF) application for hardware monitoring on small USB screens of the **
 </p>
 
 > [!WARNING]
-> **Tested exclusively on a 3.5" IPS "V2" screen** (CH340 chip, `VID_1A86&PID_5722`, identifier `USB35INCHIPSV2`, native resolution 320×480). The application implements only the **Rev A** communication protocol - other hardware variants (Rev B/C/D, WeAct A/B and other screen sizes) **are not supported**, even though `data/themes` contains ready-made themes for larger screens too (5", 8", 8.8", etc.) - those will only display correctly on a screen of the matching physical size.
+> **Tested exclusively on a 3.5" IPS "V2" screen** (CH340 chip, `VID_1A86&PID_5722`, identifier `USB35INCHIPSV2`, native resolution 320×480).
+The application implements only the **Rev A** communication protocol - other hardware variants (Rev B/C/D, WeAct A/B and other screen sizes) **are not supported**, even though `data/themes` contains ready-made themes for larger screens too (5", 8", 8.8", etc.) - those will only display correctly on a screen of the matching physical size.
 
 ## Download
 Check GitHub Releases: https://github.com/sefinek/turing-monitor/releases  
