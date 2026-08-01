@@ -364,7 +364,7 @@
 								<BeginStoryboard>
 									<Storyboard>
 										<DoubleAnimation Storyboard.TargetName="knobOffset" Storyboard.TargetProperty="X"
-										                  To="18" Duration="0:0:0.15">
+										                 To="18" Duration="0:0:0.15">
 											<DoubleAnimation.EasingFunction>
 												<QuadraticEase EasingMode="EaseOut" />
 											</DoubleAnimation.EasingFunction>
@@ -378,7 +378,7 @@
 								<BeginStoryboard>
 									<Storyboard>
 										<DoubleAnimation Storyboard.TargetName="knobOffset" Storyboard.TargetProperty="X"
-										                  To="0" Duration="0:0:0.15">
+										                 To="0" Duration="0:0:0.15">
 											<DoubleAnimation.EasingFunction>
 												<QuadraticEase EasingMode="EaseOut" />
 											</DoubleAnimation.EasingFunction>
